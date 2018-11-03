@@ -43,7 +43,6 @@ def fill_adverbs
 		"barely",
 		"bashfully",
 		"beautifully",
-		"before",
 		"begrudgingly",
 		"believably",
 		"bewilderedly",

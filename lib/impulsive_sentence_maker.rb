@@ -44,7 +44,7 @@ class ImpulsiveSentenceMaker
 			return sentence + follow_verb
 		when "adverb"
 			return sentence + follow_adverb
-		when "conjunction"
+		when "conjunction", "and"
 			return sentence + " " + follow_conjunction
 		else
 			return "Error!"
@@ -103,7 +103,7 @@ class ImpulsiveSentenceMaker
 				@complete_clause = false
 				return @conjunctions.sample
 			else
-				@last_word = "conjunction"
+				@last_word = "and"
 				return "and"
 			end
 		elsif decider == 1 then
@@ -123,13 +123,14 @@ class ImpulsiveSentenceMaker
 		decider = rand(4)
 		if decider == 0 then
 			@last_word = "adverb"
-			return ", #{@adverbs.sample}"
+			return " #{@adverbs.sample}"
 		elsif decider == 1 then
-			@last_word = "conjunction"
 			decider2 = rand(4)
 			if decider2 == 0
+				@last_word = "conjunction"
 				return ", #{@conjunctions.sample}"
 			else
+				@last_word = "and"
 				return " and"
 			end
 		elsif decider == 2 then
@@ -159,18 +160,15 @@ class ImpulsiveSentenceMaker
 			# compound subject
 			@plural = true
 			return start_predicate
-		# elsif prev.end_with?("and") then
-		# 	# compound predicate
-		# 	decider = rand(2)
-		# 	if decider == 0 then
-		# 		@complete_clause = true
-		# 		@last_word = "verb"
-		# 		if @plural == true then
-		# 			return @verbs.sample
-		# 		else
-		# 			return make_present_tense(@verbs.sample)
-		# 		end
-		# 	end
+		elsif @last_word == "and" then
+			# compound predicate
+			@complete_clause = true
+			@last_word = "verb"
+			if @plural == true then
+				return @verbs.sample
+			else
+				return make_present_tense(@verbs.sample)
+			end
 		else
 			# make a compound sentence, start a new clause
 			@complete_clause = false
