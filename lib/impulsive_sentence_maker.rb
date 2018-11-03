@@ -23,38 +23,35 @@ class ImpulsiveSentenceMaker
 	def make_sentence
 		@complete_clause = false
 		@plural = false
-		sentence = start_sentence()
+		sentence = start_predicate()
 
 		while @last_word != "punctuation"
 			sentence = follow(sentence)
 		end
 
-		return sentence
+		return sentence.capitalize
 	end
 
 	def follow(sentence)
-		if @last_word == "noun" then
-			sentence = follow_noun(sentence)
-		elsif @last_word == "adjective" then
-			sentence = follow_adjective(sentence)
-		elsif @last_word == "prefix" then
-			sentence = follow_prefix(sentence)
-		elsif @last_word == "verb" then
-			sentence = follow_verb(sentence)
-		elsif @last_word == "adverb" then
-			sentence = follow_adverb(sentence)
-		elsif @last_word == "conjunction" then
-			sentence = follow_conjunction(sentence)
-		elsif @last_word == "preposition" then
-			sentence = sentence + " " + start_sentence
+		case @last_word
+		when "noun"
+			return sentence + " " + follow_noun
+		when "adjective"
+			return sentence + follow_adjective
+		when "prefix"
+			return sentence +" "+ follow_prefix
+		when "verb"
+			return sentence + follow_verb
+		when "adverb"
+			return sentence + follow_adverb
+		when "conjunction"
+			return sentence + " " + follow_conjunction
 		else
-			sentence = "157-17348914587-Error!"
+			return "Error!"
 		end
-
-		return sentence
 	end
 
-	def start_sentence
+	def start_predicate
 		decider = rand(6)
 		if decider == 0 then
 			@last_word = "noun"
@@ -68,98 +65,117 @@ class ImpulsiveSentenceMaker
 		end
 	end
 
-	def follow_prefix(prev)
+	def prepositional_phrase
+		phrase = @prepositions.sample + " " + start_predicate()
+		while @last_word != "noun" do
+			phrase = follow(phrase)
+		end
+		return phrase
+	end
+
+	def follow_prefix
 		decider = rand(4)
 		if decider == 0 then
 			@last_word = "adjective"
-			return prev + " #{@adjectives.sample}"
+			return @adjectives.sample
 		else
 			@last_word = "noun"
-			return prev + " #{@nouns.sample}"
+			return @nouns.sample
 		end
 	end
 
-	def follow_adjective(prev)
+	def follow_adjective
 		decider = rand(4)
 		if decider == 0 then
 			@last_word = "adjective"
-			return prev + ", #{@adjectives.sample}"
+			return ", #{@adjectives.sample}"
 		else
 			@last_word = "noun"
-			return prev + " #{@nouns.sample}"
+			return " #{@nouns.sample}"
 		end
 	end
 
-	def follow_noun(prev)
+	def follow_noun
 		decider = rand(4)
 		if decider == 0 then
-			@last_word = "conjunction"
-			return prev + " #{@conjunctions.sample}"
+			if @complete_clause == true
+				@last_word = "conjunction"
+				@complete_clause = false
+				return @conjunctions.sample
+			else
+				@last_word = "conjunction"
+				return "and"
+			end
 		elsif decider == 1 then
-			@last_word = "preposition"
-			return prev + " #{@prepositions.sample}"
+			return prepositional_phrase
 		else
 			@last_word = "verb"
 			@complete_clause = true
 			if @plural == true then
-				return prev + " #{@verbs.sample}"
+				return @verbs.sample
 			else
-				return prev + " #{make_present_tense(@verbs.sample)}"
+				return make_present_tense(@verbs.sample)
 			end
 		end
 	end
 
-	def follow_verb(prev)
+	def follow_verb
 		decider = rand(4)
 		if decider == 0 then
 			@last_word = "adverb"
-			return prev + " #{@adverbs.sample}"
+			return ", #{@adverbs.sample}"
 		elsif decider == 1 then
 			@last_word = "conjunction"
-			return prev + ", #{@conjunctions.sample}"
+			decider2 = rand(4)
+			if decider2 == 0
+				return ", #{@conjunctions.sample}"
+			else
+				return " and"
+			end
 		elsif decider == 2 then
-			@last_word = "preposition"
-			return prev + " #{@prepositions.sample}"
+			return " " + prepositional_phrase()
 		else
 			@last_word = "punctuation"
-			return prev.capitalize + "#{["?", "!", "."].sample}"
+			return "#{["?", "!", "."].sample}"
 		end
 	end
 
-	def follow_adverb(prev)
+	def follow_adverb
 		decider = rand(4)
 		if decider == 0 then
 			@last_word = "adverb"
-			return prev + ", #{@adverbs.sample}"
+			return ", #{@adverbs.sample}"
 		elsif decider == 1 then
 			@last_word = "conjunction"
-			return prev + ", #{@conjunctions.sample}"
+			return ", #{@conjunctions.sample}"
 		else
 			@last_word = "punctuation"
-			return prev.capitalize + "#{["?", "!", "."].sample}"
+			return "#{["?", "!", "."].sample}"
 		end
 	end
 	
-	def follow_conjunction(prev)
+	def follow_conjunction
 		if @complete_clause == false then
-			if prev.end_with?("and") then
-				@plural = true
-			end
-			return prev + " " + start_sentence
+			# compound subject
+			@plural = true
+			return start_predicate
+		# elsif prev.end_with?("and") then
+		# 	# compound predicate
+		# 	decider = rand(2)
+		# 	if decider == 0 then
+		# 		@complete_clause = true
+		# 		@last_word = "verb"
+		# 		if @plural == true then
+		# 			return @verbs.sample
+		# 		else
+		# 			return make_present_tense(@verbs.sample)
+		# 		end
+		# 	end
 		else
-			decider = rand(2)
-			if decider == 0 then
-				@last_word = "verb"
-				if @plural == true then
-					return prev + " #{@verbs.sample}"
-				else
-					return prev + " " + make_present_tense(@verbs.sample)
-				end
-			else
-				@complete_clause = false
-				@plural = false
-				return prev + " " + start_sentence
-			end
+			# make a compound sentence, start a new clause
+			@complete_clause = false
+			@plural = false
+			return start_predicate
 		end
 	end
 
