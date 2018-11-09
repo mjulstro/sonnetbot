@@ -1,54 +1,64 @@
+require_relative 'Word.rb'
+
 class DictReader
 
 	def initialize
-		@dict
-		read_dict
+		@dict = Hash.new { |hash, key| hash[key] = look_up_word(key) }
 	end
 
-	def read_dict
-	# create a dictionary of <spelling, [pronunciations]>
-	# for each line in cmudict.txt
-		# if the line does not begin with punctuation
-			# the line is a string
-
-			# all the characters before the first " " in that
-			# string comprise the word; everything else is the
-			# pronunciation
-
-			# add to dict <word, pronunciation>
-
-			# if the word ends in (1)
-				# add its pronunciation to the value in the dict
-				# for the version if it that doesn't have (1)
-			# end
-
-		# end
+	def look_up_word(key)
+		pronunciation_array = Array.new
+		File.foreach("/Users/Marie/Documents/GitHub/sonnetbot/lib/cmudict.txt") do |line|
+			# if there are multiple pronunciations in CMUdict
+			# for the word, this will find all of them
+			if line.start_with?(key.upcase) and [" ", "("].include?(line[key.length()])
+				# all the characters before the first " " in that
+				# string comprise the word; everything else is the
+				# pronunciation
+				pronunciation = line.split(' ')[1..-1].join(' ')
+				pronunciation_array << pronunciation
+			end
+		end
+		return pronunciation_array
 	end
 
 	def make_word_list(word_list)
 		# the word lists will be organized by part of speech
 		new_word_list = []
 
-		for word in word_list
-			# find the word's pronunciation(s) in cmudict and save them
-
-			# for each pronunciation
-				find_stress_pattern(pronunciation)
-				# add that to a list of pronunciations
-				# count the number of syllables in the stress pattern
-				# and add that to a list of numbers of syllables
-
-			new_word_list.add(Word(spelling, pronunciations,
-				stress_patterns, nums_syllables))
+		for spelling in word_list
+			new_word_list.push(make_single_word(spelling))
 		end
 
 		return new_word_list
 	end
 
-	def find_stress_pattern(pronunciation)
-		# takes in a pronunciation string and parses stress patterns from it
+	def make_single_word(spelling)
+		pronunciations = @dict[spelling]
+		stress_patterns = Array.new
+		nums_syllables = Array.new
+		
+		for pronunciation in pronunciations
+			stress_patterns << find_stress_pattern(pronunciation)
+			nums_syllables << pronunciation.scan(/0|1|2/).size
+		end
 
+		return Word.new(spelling, pronunciations,
+				stress_patterns, nums_syllables)
+	end
+
+	def find_stress_pattern(pronunciation)
 		# example pronunciation string: "AE1 D M ER0 AH0 B AH0 L"
+		sounds = pronunciation.split(" ")
+		stress_pattern = ""
+		for sound in sounds
+			if sound.include?("1") or sound.include?("2")
+				stress_pattern << "/"
+			elsif sound.include?("0")
+				stress_pattern << "x"
+			end
+		end
+		return stress_pattern
 	end
 
 end
