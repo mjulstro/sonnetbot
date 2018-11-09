@@ -237,7 +237,7 @@ class Sonnetbot
 		return false
 	end
 
-	def rhymes?(spelling)
+	def rhymes?(word)
 		# This is O(n), which is a lot to do for every word, but
 		# very few words have more than 2 or 3 pronunciations,
 		# so it's almost constant time.
@@ -246,11 +246,10 @@ class Sonnetbot
 		# "L AE1 N D R OW1 V ER0"
 		# "R OW2 HH AY1 P N AO2 L"
 		# example @rhyming_with: "AH1 L"
-		word = spelling.strip
-		for pronunciation in word.pronunciations
+		for pronunciation in word.get_pronunciations
 			last_syl_start = pronunciation.rindex(/\d/) - 2
 			last_syl = pronunciation.slice(last_syl_start..pronunciation.length)
-			last_syl = last_syl.tr('012', '1')
+			last_syl = last_syl.tr('012', '')  # removes stress information; this should be accounted for by the scansion
 			if @rhyming_with == last_syl
 				return true
 			end

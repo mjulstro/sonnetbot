@@ -14,4 +14,4 @@ puts beneath.get_pronunciations
 puts beneath.get_stress_patterns
 puts beneath.get_nums_syllables
 puts ""
-puts sonnetbot.scans?(beneath)
+puts sonnetbot.rhymes?(beneath)
