@@ -1,24 +1,17 @@
-require_relative '../lib/sentence_maker.rb'
+require_relative '../lib/Sonnetbot.rb'
+require_relative '../lib/DictReader.rb'
 
-speaker = SentenceMaker.new
+sonnetbot = Sonnetbot.new
+dict_reader = DictReader.new
 
-def test_sentence_making
-	for i in 1..10
-		puts speaker.make_sentence
-	end
-end
+# for i in 1..10
+# 	puts sonnetbot.make_sonnet
+# end
 
-def test_ask_answering
-	for i in 1..10
-		response = speaker.make_response("My girlfriend is so cute!")
-		puts response
-		puts speaker.make_response(response)
-		puts ""
-	end
-end
-
-#test_sentence_making
-#test_ask_answering
-
-input = gets
-puts speaker.make_response(input)
+beneath = dict_reader.make_single_word("beneath")
+puts beneath.get_spelling
+puts beneath.get_pronunciations
+puts beneath.get_stress_patterns
+puts beneath.get_nums_syllables
+puts ""
+puts sonnetbot.scans?(beneath)
