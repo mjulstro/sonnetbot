@@ -8,10 +8,8 @@ dict_reader = DictReader.new
 # 	puts sonnetbot.make_sonnet
 # end
 
-beneath = dict_reader.make_single_word("beneath")
-puts beneath.get_spelling
-puts beneath.get_pronunciations
-puts beneath.get_stress_patterns
-puts beneath.get_nums_syllables
-puts ""
-puts sonnetbot.rhymes?(beneath)
+puts sonnetbot.make_sentence
+
+# beneath = dict_reader.make_single_word("beneath")
+# puts beneath
+# puts sonnetbot.rhymes?(beneath)

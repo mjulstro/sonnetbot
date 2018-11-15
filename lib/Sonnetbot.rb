@@ -58,9 +58,10 @@ class Sonnetbot
 
 		while @last_word != "punctuation"
 			next_word = follow(sentence)
-			while !scans?(next_word)
-				sentence = sentence + next_word
-			end
+			# while !scans?(next_word)
+			# 	next_word = follow(sentence)
+			# end
+			sentence += next_word
 		end
 
 		return sentence.capitalize

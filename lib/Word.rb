@@ -9,6 +9,13 @@ class Word
 		# @part_of_speech = part_of_speech
 	end
 
+	def to_s
+		return @spelling +"\n"+
+			@pronunciations +"\n"+
+			@stress_patterns +"\n"+
+			@nums_syllables
+	end
+
 	def get_spelling
 		return @spelling
 	end
