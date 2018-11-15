@@ -3,20 +3,14 @@ require_relative '../lib/DictReader.rb'
 
 sonnetbot = Sonnetbot.new
 
-# def write_one_sonnet
-# 	puts sonnetbot.make_sonnet()
-# end
-
-# def write_one_sentence
-# 	puts sonnetbot.make_sentence
-# end
-
 def write_ten_sentences
 	for i in 1..10
 		puts sonnetbot.make_sentence
 	end
 end
 
+# TODO: update this for the new hybrid Word class
+# (to_s overridden, contains constructor and find_stress_pattern)
 def test_word_creation(spelling)
 	dict_reader = DictReader.new
 	word = dict_reader.make_single_word(spelling)
@@ -25,14 +19,6 @@ def test_word_creation(spelling)
 	puts word.get_stress_patterns
 	puts word.get_nums_syllables
 	puts ""
-end
-
-def test_scansion_evaluation(word)
-	puts sonnetbot.rhymes?(word)
-end
-
-def test_rhyme_evaluation(word)
-	puts sonnetbot.rhymes?(beneath)
 end
 
 puts sonnetbot.make_sentence()

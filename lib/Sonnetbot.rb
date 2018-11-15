@@ -9,9 +9,10 @@ require_relative 'DictReader.rb'
 class Sonnetbot
 
 	def initialize
+		dict_reader = DictReader.new
 		# vocabulary
 		prefixes = ["a", "the", "my", "your", "his", "her", "their", "our"]
-		list_of_lists = DictReader.initialize_lists([prefixes,
+		list_of_lists = dict_reader.initialize_lists([prefixes,
 			fill_adjectives, fill_nouns, fill_verbs, fill_adverbs,
 			fill_conjunctions, fill_prepositions])
 		@prefixes     = list_of_lists[0]
