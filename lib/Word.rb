@@ -1,12 +1,32 @@
 class Word
 
-	def initialize(spelling, pronunciations,
-		stress_patterns, nums_syllables)
+	def initialize(spelling, pronunciation_array)
+		stress_patterns = Array.new
+		nums_syllables = Array.new
+		
+		for pronunciation in pronunciation_array
+			stress_patterns << find_stress_pattern(pronunciation)
+			nums_syllables << pronunciation.scan(/0|1|2/).size
+		end
+
 		@spelling = spelling
-		@pronunciations = pronunciations
+		@pronunciations = pronunciation_array
 		@stress_patterns = stress_patterns
 		@nums_syllables = nums_syllables
-		# @part_of_speech = part_of_speech
+	end
+
+	def find_stress_pattern(pronunciation)
+		# example pronunciation string: "AE1 D M ER0 AH0 B AH0 L"
+		sounds = pronunciation.split(" ")
+		stress_pattern = ""
+		for sound in sounds
+			if sound.include?("1") or sound.include?("2")
+				stress_pattern << "/"
+			elsif sound.include?("0")
+				stress_pattern << "x"
+			end
+		end
+		return stress_pattern
 	end
 
 	def get_spelling

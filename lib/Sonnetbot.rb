@@ -4,19 +4,23 @@ require_relative 'adverbs.rb'
 require_relative 'nouns.rb'
 require_relative 'conjunctions.rb'
 require_relative 'prepositions.rb'
+require_relative 'DictReader.rb'
 
 class Sonnetbot
 
 	def initialize
-
-		# part-of-speech lists
-		@prefixes = ["a", "the", "my", "your", "his", "her", "their", "our"]
-		@adjectives = fill_adjectives
-		@nouns = fill_nouns
-		@verbs = fill_verbs
-		@adverbs = fill_adverbs
-		@conjunctions = fill_conjunctions
-		@prepositions = fill_prepositions
+		# vocabulary
+		prefixes = ["a", "the", "my", "your", "his", "her", "their", "our"]
+		list_of_lists = DictReader.initialize_lists([prefixes,
+			fill_adjectives, fill_nouns, fill_verbs, fill_adverbs,
+			fill_conjunctions, fill_prepositions])
+		@prefixes     = list_of_lists[0]
+		@adjectives   = list_of_lists[1]
+		@nouns        = list_of_lists[2]
+		@verbs        = list_of_lists[3]
+		@adverbs      = list_of_lists[4]
+		@conjunctions = list_of_lists[5]
+		@prepositions = list_of_lists[6]
 
 		# grammatical state variables
 		@last_word = ""
@@ -24,12 +28,13 @@ class Sonnetbot
 		@plural = false
 
 		# poetic state variables
-		@curr_line = 1
-		@curr_syllable = 1
+		@curr_line = 0
+		@curr_syllable = 0
 		@rhyming_with = nil
 		@meter = "x/x/x/x/x/"
-		@rhyme_scheme = nil
+		@rhyme_scheme = "ABAB CDCD EFEF GG"
 	end
+
 
 	########## primary methods: the meat and bones ##########
 
@@ -52,14 +57,23 @@ class Sonnetbot
 	end
 
 	def make_sentence
+		puts "Starting a sentence!"
 		@complete_clause = false
 		@plural = false
 		sentence = start_predicate()
 
 		while @last_word != "punctuation"
+			puts sentence
 			next_word = follow(sentence)
-			while !scans?(next_word)
-				sentence = sentence + next_word
+			while !scans?(next_word) or !rhymes?(next_word)
+				next_word = follow(setence)
+			end
+			sentence = sentence + next_word
+
+			if @curr_syllable == @meter.length
+				sentence + sentence + "\n"
+				@curr_syllable = 0
+				@curr_line = curr_line + 1
 			end
 		end
 
@@ -92,20 +106,22 @@ class Sonnetbot
 		decider = rand(6)
 		if decider == 0 then
 			@last_word = "noun"
-			return @nouns.sample
+			return select_from(@nouns)
 		elsif decider == 1 then
 			@last_word = "adjective"
-			return @adjectives.sample
+			return select_from(@adjectives)
 		else
 			@last_word = "prefix"
-			return @prefixes.sample
+			return select_from(@prefixes)
 		end
 	end
 
 	def prepositional_phrase
-		phrase = @prepositions.sample + " " + start_predicate()
+		phrase = select_from(@prepositions)
+		phrase = phrase + " " + start_predicate()
+
 		while @last_word != "noun" do
-			phrase = follow(phrase)
+			phrase = phrase + " " + follow(phrase)
 		end
 		return phrase
 	end
@@ -114,10 +130,10 @@ class Sonnetbot
 		decider = rand(4)
 		if decider == 0 then
 			@last_word = "adjective"
-			return @adjectives.sample
+			return select_from(@adjectives)
 		else
 			@last_word = "noun"
-			return @nouns.sample
+			return select_from(@nouns)
 		end
 	end
 
@@ -125,10 +141,10 @@ class Sonnetbot
 		decider = rand(4)
 		if decider == 0 then
 			@last_word = "adjective"
-			return ", #{@adjectives.sample}"
+			return ", " + select_from(@adjectives)
 		else
 			@last_word = "noun"
-			return " #{@nouns.sample}"
+			return "  " + select_from(@nouns)
 		end
 	end
 
@@ -138,9 +154,10 @@ class Sonnetbot
 			if @complete_clause == true
 				@last_word = "conjunction"
 				@complete_clause = false
-				return @conjunctions.sample
+				return select_from(@conjunctions)
 			else
 				@last_word = "and"
+				@curr_syllable = curr_syllable + 1
 				return "and"
 			end
 		elsif decider == 1 then
@@ -149,9 +166,9 @@ class Sonnetbot
 			@last_word = "verb"
 			@complete_clause = true
 			if @plural == true then
-				return @verbs.sample
+				return select_from(@verbs)
 			else
-				return make_present_tense(@verbs.sample)
+				return make_present_tense(select_from(@verbs))
 			end
 		end
 	end
@@ -160,14 +177,15 @@ class Sonnetbot
 		decider = rand(4)
 		if decider == 0 then
 			@last_word = "adverb"
-			return " #{@adverbs.sample}"
+			return " #{select_from(@adverbs)}"
 		elsif decider == 1 then
 			decider2 = rand(4)
 			if decider2 == 0
 				@last_word = "conjunction"
-				return ", #{@conjunctions.sample}"
+				return ", #{select_from(@conjunctions)}"
 			else
 				@last_word = "and"
+				@curr_syllable = curr_syllable + 1
 				return " and"
 			end
 		elsif decider == 2 then
@@ -182,10 +200,10 @@ class Sonnetbot
 		decider = rand(4)
 		if decider == 0 then
 			@last_word = "adverb"
-			return ", #{@adverbs.sample}"
+			return ", #{select_from(@adverbs)}"
 		elsif decider == 1 then
 			@last_word = "conjunction"
-			return ", #{@conjunctions.sample}"
+			return ", #{select_from(@conjunctions)}"
 		else
 			@last_word = "punctuation"
 			return "#{["?", "!", "."].sample}"
@@ -202,9 +220,9 @@ class Sonnetbot
 			@complete_clause = true
 			@last_word = "verb"
 			if @plural == true then
-				return @verbs.sample
+				return select_from(@verbs)
 			else
-				return make_present_tense(@verbs.sample)
+				return make_present_tense(select_from(@verbs))
 			end
 		else
 			# make a compound sentence, start a new clause
@@ -231,6 +249,7 @@ class Sonnetbot
 			# puts stress_pattern
 			# puts correct_stress
 			if stress_pattern == correct_stress and @curr_syllable + stress_pattern.length <= @meter.length
+				@curr_syllable = @curr_syllable + stress_pattern.length
 				return true
 			end
 		end
@@ -242,11 +261,26 @@ class Sonnetbot
 		# very few words have more than 2 or 3 pronunciations,
 		# so it's almost constant time.
 
+		if @rhyming_with == nil
+			# return true if this line is setting the rhyme sound
+			return true
+		end
+
 		# example pronunciation strings: "AE1 D M ER0 AH0 B AH0 L"
 		# "L AE1 N D R OW1 V ER0"
 		# "R OW2 HH AY1 P N AO2 L"
 		# example @rhyming_with: "AH1 L"
 		for pronunciation in word.get_pronunciations
+			# TODO: How do we get at stress_pattern?
+			# Is it more efficient to use
+			# dict_reader.find_stress_pattern(pronunciation) or
+			# word.stress_patterns[word.getpronunciations.indexOf(pronunciation)] ?
+			pron_length = dict_reader.find_stress_pattern(pronunciation).length
+			if @curr_syllable + pron_length <= @meter.length - 1
+				return true
+				# return true if this word doesn't put us at the end of the line
+			end
+
 			last_syl_start = pronunciation.rindex(/\d/) - 2
 			last_syl = pronunciation.slice(last_syl_start..pronunciation.length)
 			last_syl = last_syl.tr('012', '')  # removes stress information; this should be accounted for by the scansion
@@ -255,6 +289,14 @@ class Sonnetbot
 			end
 		end
 		return false
+	end
+
+	def select_from(list)
+		curr_word = list.sample
+		while !scans?(curr_word)
+			curr_word = list.sample
+		end
+		return curr_word.spelling
 	end
 
 end
