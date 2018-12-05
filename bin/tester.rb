@@ -22,3 +22,5 @@ def test_word_creation(spelling)
 end
 
 # puts sonnetbot.make_sentence()
+# dict_reader = DictReader.new
+# puts dict_reader.look_up_word("beneath")
