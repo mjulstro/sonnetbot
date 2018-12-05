@@ -29,6 +29,17 @@ class Word
 		return stress_pattern
 	end
 
+	def to_s
+		string = @spelling + "\n"
+		for list in [@pronunciations, @stress_patterns, @nums_syllables]
+			for item in list
+				string << item + " "
+			end
+			string << "\n"
+		end
+		return string
+	end
+
 	def get_spelling
 		return @spelling
 	end

@@ -21,4 +21,4 @@ def test_word_creation(spelling)
 	puts ""
 end
 
-puts sonnetbot.make_sentence()
+# puts sonnetbot.make_sentence()
