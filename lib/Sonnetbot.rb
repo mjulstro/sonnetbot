@@ -24,6 +24,8 @@ class Sonnetbot
 		@conjunctions = hash_of_lists["conjunctions"]
 		@prepositions = hash_of_lists["prepositions"]
 
+		puts @adjectives.final
+
 		# grammatical state variables
 		@last_word = ""
 		@complete_clause = false

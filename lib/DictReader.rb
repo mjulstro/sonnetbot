@@ -23,7 +23,7 @@ class DictReader
 		File.foreach("/Users/Marie/Documents/GitHub/sonnetbot/lib/cmudict.txt") do |line|
 			if @next_word == "zzzzzzzzzzzzz"
 				word = Word.new(curr_word, @pronunciation_array)
-				@next_word_pos.add(word)
+				@curr_word_pos.add(word)
 				break  # we've gotten through all the words in the vocab
 
 			# if there are multiple pronunciations in CMUdict
@@ -36,7 +36,7 @@ class DictReader
 				@pronunciation_array << pronunciation
 			elsif line.start_with?(@next_word.upcase) and [" ", "("].include?(line[@next_word.length()])
 				word = Word.new(curr_word, @pronunciation_array)
-				@next_word_pos.add(word)
+				@curr_word_pos.add(word)
 				curr_word = @next_word
 				
 				initialize_current_word_array
@@ -56,6 +56,7 @@ class DictReader
 	end
 
 	def initialize_current_word_array
+		@curr_word_pos = @next_word_pos
 		@next_word = "zzzzzzzzzzzzz"
 		for pos in @parts_of_speech.values
 			if !pos.done?
@@ -68,7 +69,6 @@ class DictReader
 		end
 		@next_word_pos.increment
 		@pronunciation_array = Array.new  # this word's pronunciations
-
 	end
 
 	class Part_of_Speech
