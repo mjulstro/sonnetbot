@@ -33,7 +33,7 @@ class Word
 		string = @spelling + "\n"
 		for list in [@pronunciations, @stress_patterns, @nums_syllables]
 			for item in list
-				string << item + " "
+				string << item.to_s + " "
 			end
 			string << "\n"
 		end

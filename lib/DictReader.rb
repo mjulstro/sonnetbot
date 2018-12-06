@@ -21,8 +21,9 @@ class DictReader
 		# iterate over the lines in the CMU Dict comparing them
 		# to the word in the lists that's alphabetically first
 		File.foreach("/Users/Marie/Documents/GitHub/sonnetbot/lib/cmudict.txt") do |line|
-			if @next_word == nil
-				break
+			if @next_word == "zzzzzzzzzzzzz"
+				break  # we've gotten through all the words in the vocab
+
 			# if there are multiple pronunciations in CMUdict
 			# for the word, this will find all of them
 			elsif line.start_with?(curr_word.upcase) and [" ", "("].include?(line[curr_word.length()])
@@ -31,11 +32,7 @@ class DictReader
 				# pronunciation
 				pronunciation = line.split(' ')[1..-1].join(' ')
 				@pronunciation_array << pronunciation
-
-				# puts "Found " + curr_word + " as curr_word"
 			elsif line.start_with?(@next_word.upcase) and [" ", "("].include?(line[@next_word.length()])
-				# puts "Found " + @next_word + " as @next_word"
-
 				word = Word.new(curr_word, @pronunciation_array)
 				new_list_of_lists[@part_of_speech] << word
 				curr_word = @next_word
@@ -44,7 +41,7 @@ class DictReader
 
 				pronunciation = line.split(' ')[1..-1].join(' ')
 				@pronunciation_array << pronunciation
-			 else
+			else
 			 	if line.split(' ')[0] > @next_word.upcase
 			 		initialize_current_word_array
 			 	end
@@ -53,41 +50,29 @@ class DictReader
 		end
 
 		puts "Done initializing the lists!"
-		puts new_list_of_lists
 		return new_list_of_lists
 	end
 
 	def initialize_current_word_array
-		curr_words = Array.new
+		@next_word = "zzzzzzzzzzzzz"
+		next_word_pos = -1
+		part_of_speech = 0
 		for list in @list_of_lists  # loop over the part-of-speech lists
 			this_index = @list_index_dict[list]  # find our place in this list
 			if this_index < list.length  # if we haven't gotten to the end of this list
 
 				word_to_be_added = list[this_index]
-				if curr_words.include?(word_to_be_added)
-					@list_index_dict[list] += 1
-					word_to_be_added = list[this_index + 1]
+				if word_to_be_added < @next_word
+					@next_word = word_to_be_added
+					next_word_pos = part_of_speech
 				end
-				curr_words << word_to_be_added
-				
 			end
+			part_of_speech += 1
 		end
-
-		if curr_words.empty?
-			@next_word = nil
-			return
-		end
-		# choose the word that comes first alphabetically out of all the lists
-		@next_word = curr_words.min
-
-		# update the index of the list it came from
-		@part_of_speech = curr_words.index(@next_word)
-		@list_index_dict[@list_of_lists[@part_of_speech]] += 1
+		@part_of_speech = next_word_pos
+		@list_index_dict[@list_of_lists[next_word_pos]] += 1
 		@pronunciation_array = Array.new  # this word's pronunciations
 
-		puts curr_words
-		puts "***************** " + @next_word + " *******************"
-		puts
 	end
 
 end
