@@ -2,18 +2,18 @@ require_relative 'Word.rb'
 
 class DictReader
 
-	def initialize_lists(list_of_lists)
-		# sort all the word lists alphabetically
-		# and create new versions to return
-		@list_of_lists = Array.new
-		new_list_of_lists = Array.new
-		for list in list_of_lists
-			@list_of_lists << list.sort_by { |word| word.downcase }
-			new_list_of_lists << Array.new
-		end
+	def initialize_lists(prefixes, adjectives, nouns, verbs, adverbs,
+		conjunctions, prepositions)
+		@parts_of_speech = Hash.new
 
-		# initialize a hash of where we are in each sorted list
-		@list_index_dict = Hash.new { |hash, key| hash[key] = 0 }
+		@parts_of_speech["prefixes"]     = Part_of_Speech.new(prefixes,     "prefixes")
+		@parts_of_speech["adjectives"]   = Part_of_Speech.new(adjectives,   "adjectives")
+		@parts_of_speech["nouns"]        = Part_of_Speech.new(nouns,        "nouns")
+		@parts_of_speech["verbs"]        = Part_of_Speech.new(verbs,        "verbs")
+		@parts_of_speech["adverbs"]      = Part_of_Speech.new(adverbs,      "adverbs")
+		@parts_of_speech["conjunctions"] = Part_of_Speech.new(conjunctions, "conjunctions")
+		@parts_of_speech["prepositions"] = Part_of_Speech.new(prepositions, "prepositions")
+
 		initialize_current_word_array  #first time: @next_word = a
 		curr_word = @next_word  #curr_word = a
 		initialize_current_word_array  #@next_word = "abandoned"
@@ -22,6 +22,8 @@ class DictReader
 		# to the word in the lists that's alphabetically first
 		File.foreach("/Users/Marie/Documents/GitHub/sonnetbot/lib/cmudict.txt") do |line|
 			if @next_word == "zzzzzzzzzzzzz"
+				word = Word.new(curr_word, @pronunciation_array)
+				@next_word_pos.add(word)
 				break  # we've gotten through all the words in the vocab
 
 			# if there are multiple pronunciations in CMUdict
@@ -34,7 +36,7 @@ class DictReader
 				@pronunciation_array << pronunciation
 			elsif line.start_with?(@next_word.upcase) and [" ", "("].include?(line[@next_word.length()])
 				word = Word.new(curr_word, @pronunciation_array)
-				new_list_of_lists[@part_of_speech] << word
+				@next_word_pos.add(word)
 				curr_word = @next_word
 				
 				initialize_current_word_array
@@ -50,29 +52,60 @@ class DictReader
 		end
 
 		puts "Done initializing the lists!"
-		return new_list_of_lists
+		return @parts_of_speech
 	end
 
 	def initialize_current_word_array
 		@next_word = "zzzzzzzzzzzzz"
-		next_word_pos = -1
-		part_of_speech = 0
-		for list in @list_of_lists  # loop over the part-of-speech lists
-			this_index = @list_index_dict[list]  # find our place in this list
-			if this_index < list.length  # if we haven't gotten to the end of this list
-
-				word_to_be_added = list[this_index]
+		for pos in @parts_of_speech.values
+			if !pos.done?
+				word_to_be_added = pos.first
 				if word_to_be_added < @next_word
 					@next_word = word_to_be_added
-					next_word_pos = part_of_speech
+					@next_word_pos = pos
 				end
 			end
-			part_of_speech += 1
 		end
-		@part_of_speech = next_word_pos
-		@list_index_dict[@list_of_lists[next_word_pos]] += 1
+		@next_word_pos.increment
 		@pronunciation_array = Array.new  # this word's pronunciations
 
+	end
+
+	class Part_of_Speech
+		def initialize(old_list, key)
+			@key = key
+			@old_list = old_list.sort_by { |word| word.downcase }
+			@new_list = Array.new
+			@index = 0
+		end
+
+		def key
+			return @key
+		end
+
+		def increment
+			@index += 1
+		end
+
+		def add(word)
+			@new_list << word
+		end
+
+		def first
+			return @old_list[@index]
+		end
+
+		def final
+			return @new_list
+		end
+
+		def done?
+			if @index >= @old_list.length
+				return true
+			else
+				return false
+			end
+		end
 	end
 
 end

@@ -37,14 +37,8 @@ class Word
 			end
 			string << "\n"
 		end
+		string << "\n"
 		return string
-	end
-
-	def to_s
-		return @spelling +"\n"+
-			@pronunciations +"\n"+
-			@stress_patterns +"\n"+
-			@nums_syllables
 	end
 
 	def get_spelling

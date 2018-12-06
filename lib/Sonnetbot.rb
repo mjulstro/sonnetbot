@@ -4,6 +4,7 @@ require_relative 'adverbs.rb'
 require_relative 'nouns.rb'
 require_relative 'conjunctions.rb'
 require_relative 'prepositions.rb'
+require_relative 'Word.rb'
 require_relative 'DictReader.rb'
 
 class Sonnetbot
@@ -12,16 +13,16 @@ class Sonnetbot
 		dict_reader = DictReader.new
 		# vocabulary
 		prefixes = ["a", "the", "my", "your", "his", "her", "their", "our"]
-		list_of_lists = dict_reader.initialize_lists([prefixes,
+		hash_of_lists = dict_reader.initialize_lists(prefixes,
 			fill_adjectives, fill_nouns, fill_verbs, fill_adverbs,
-			fill_conjunctions, fill_prepositions])
-		@prefixes     = list_of_lists[0]
-		@adjectives   = list_of_lists[1]
-		@nouns        = list_of_lists[2]
-		@verbs        = list_of_lists[3]
-		@adverbs      = list_of_lists[4]
-		@conjunctions = list_of_lists[5]
-		@prepositions = list_of_lists[6]
+			fill_conjunctions, fill_prepositions)
+		@prefixes     = hash_of_lists["prefixes"]
+		@adjectives   = hash_of_lists["adjectives"]
+		@nouns        = hash_of_lists["nouns"]
+		@verbs        = hash_of_lists["verbs"]
+		@adverbs      = hash_of_lists["adverbs"]
+		@conjunctions = hash_of_lists["conjunctions"]
+		@prepositions = hash_of_lists["prepositions"]
 
 		# grammatical state variables
 		@last_word = ""
@@ -234,10 +235,10 @@ class Sonnetbot
 	end
 
 	def make_present_tense(verb)
-		if verb.end_with?("s") or verb.end_with?("h") then
-			verb = "#{verb}es"
+		if verb.get_spelling.end_with?("s") or verb.get_spelling.end_with?("h")
+			return verb.get_spelling + "es"
 		else 
-			verb = "#{verb}s"
+			return verb.get_spelling + "s"
 		end
 	end
 
@@ -257,39 +258,30 @@ class Sonnetbot
 		return false
 	end
 
-	def rhymes?(word)
-		# This is O(n), which is a lot to do for every word, but
-		# very few words have more than 2 or 3 pronunciations,
-		# so it's almost constant time.
-
-		if @rhyming_with == nil
-			# return true if this line is setting the rhyme sound
+	def rhymes?(word1, word2)
+		if !(last_syls(word1) & last_syls(word2)).empty?
+			# if there's an overlap in the ways the two words can be pronounced
 			return true
+		else
+			return false
 		end
+	end
 
-		# example pronunciation strings: "AE1 D M ER0 AH0 B AH0 L"
-		# "L AE1 N D R OW1 V ER0"
-		# "R OW2 HH AY1 P N AO2 L"
-		# example @rhyming_with: "AH1 L"
+	def last_syls(word)
+		last_syls = Array.new
 		for pronunciation in word.get_pronunciations
-			# TODO: How do we get at stress_pattern?
-			# Is it more efficient to use
-			# dict_reader.find_stress_pattern(pronunciation) or
-			# word.stress_patterns[word.getpronunciations.indexOf(pronunciation)] ?
-			pron_length = dict_reader.find_stress_pattern(pronunciation).length
-			if @curr_syllable + pron_length <= @meter.length - 1
-				return true
-				# return true if this word doesn't put us at the end of the line
-			end
+			pron_length = word.stress_patterns[word.get_pronunciations.indexOf(pronunciation)].length
+			# if @curr_syllable + pron_length <= @meter.length - 1
+			# 	return true
+			# 	# return true if this word doesn't put us at the end of the line
+			# end
 
 			last_syl_start = pronunciation.rindex(/\d/) - 2
 			last_syl = pronunciation.slice(last_syl_start..pronunciation.length)
 			last_syl = last_syl.tr('012', '')  # removes stress information; this should be accounted for by the scansion
-			if @rhyming_with == last_syl
-				return true
-			end
+			last_syls << last_syl
 		end
-		return false
+		return last_syls
 	end
 
 	def select_from(list)
@@ -298,6 +290,14 @@ class Sonnetbot
 			curr_word = list.sample
 		end
 		return curr_word.spelling
+	end
+
+	def get_nouns
+		return @nouns
+	end
+
+	def get_verbs
+		return @verbs
 	end
 
 end
