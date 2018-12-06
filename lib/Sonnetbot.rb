@@ -5,6 +5,7 @@ require_relative 'nouns.rb'
 require_relative 'conjunctions.rb'
 require_relative 'prepositions.rb'
 require_relative 'Word.rb'
+require_relative 'Part_of_Speech.rb'
 require_relative 'DictReader.rb'
 
 class Sonnetbot
@@ -13,18 +14,18 @@ class Sonnetbot
 		dict_reader = DictReader.new
 		# vocabulary
 		prefixes = ["a", "the", "my", "your", "his", "her", "their", "our"]
-		hash_of_lists = dict_reader.initialize_lists(prefixes,
+		@pos_hash = dict_reader.initialize_lists(prefixes,
 			fill_adjectives, fill_nouns, fill_verbs, fill_adverbs,
 			fill_conjunctions, fill_prepositions)
-		@prefixes     = hash_of_lists["prefixes"]
-		@adjectives   = hash_of_lists["adjectives"]
-		@nouns        = hash_of_lists["nouns"]
-		@verbs        = hash_of_lists["verbs"]
-		@adverbs      = hash_of_lists["adverbs"]
-		@conjunctions = hash_of_lists["conjunctions"]
-		@prepositions = hash_of_lists["prepositions"]
+		@prefixes     = @pos_hash["prefixes"]
+		@adjectives   = @pos_hash["adjectives"]
+		@nouns        = @pos_hash["nouns"]
+		@verbs        = @pos_hash["verbs"]
+		@adverbs      = @pos_hash["adverbs"]
+		@conjunctions = @pos_hash["conjunctions"]
+		@prepositions = @pos_hash["prepositions"]
 
-		puts @adjectives.final
+		# puts @adjectives.final
 
 		# grammatical state variables
 		@last_word = ""
@@ -53,7 +54,7 @@ class Sonnetbot
 
 		# keep adding sentences to the sonnet
 		# until we reach the last syllable of the last line
-		while !(@curr_line == num_lines and @curr_syllable == meter.length)
+		while !(@curr_line >= num_lines and @curr_syllable >= meter.length)
 			sonnet = sonnet + " " + make_sentence
 		end
 
@@ -61,20 +62,25 @@ class Sonnetbot
 	end
 
 	def make_sentence
+		for pos in @pos_hash.values
+			pos.shuffle
+			pos.reset  # so we don't get the same words being chosen every time
+		end
+
 		puts "Starting a sentence!"
 		@complete_clause = false
 		@plural = false
-		sentence = start_predicate()
+		sentence = start_predicate().spelling
 
 		while @last_word != "punctuation"
 			puts sentence
 			next_word = follow(sentence)
 			while !scans?(next_word) or !rhymes?(next_word)
-				next_word = follow(setence)
+				next_word = follow(sentence)
 			end
-			sentence = sentence + next_word
+			sentence = sentence + " " + next_word.spelling
 
-			if @curr_syllable == @meter.length
+			if @curr_syllable >= @meter.length
 				sentence + sentence + "\n"
 				@curr_syllable = 0
 				@curr_line = curr_line + 1
@@ -87,19 +93,19 @@ class Sonnetbot
 	def follow(sentence)
 		case @last_word
 		when "noun"
-			return " " + follow_noun
+			return follow_noun
 		when "adjective"
 			return follow_adjective
 		when "prefix"
-			return " " + follow_prefix
+			return follow_prefix
 		when "verb"
 			return follow_verb
 		when "adverb"
 			return follow_adverb
 		when "conjunction", "and"
-			return " " + follow_conjunction
+			return follow_conjunction
 		else
-			return "Error!"
+			puts "** Error! **"  #TODO: throw an exception here
 		end
 	end
 
@@ -110,22 +116,25 @@ class Sonnetbot
 		decider = rand(6)
 		if decider == 0 then
 			@last_word = "noun"
-			return select_from(@nouns)
+			return @nouns.next
 		elsif decider == 1 then
 			@last_word = "adjective"
-			return select_from(@adjectives)
+			return @adjectives.next
 		else
 			@last_word = "prefix"
-			return select_from(@prefixes)
+			return @prefixes.next
 		end
 	end
 
 	def prepositional_phrase
-		phrase = select_from(@prepositions)
-		phrase = phrase + " " + start_predicate()
+		phrase = @prepositions.next
+		while !@prepositions.done? and !scans?(phrase)
+			phrase = @prepositions.next
+		end
+		phrase = phrase.spelling + " " + start_predicate().spelling
 
 		while @last_word != "noun" do
-			phrase = phrase + " " + follow(phrase)
+			phrase = phrase + " " + follow(phrase).spelling
 		end
 		return phrase
 	end
@@ -134,10 +143,10 @@ class Sonnetbot
 		decider = rand(4)
 		if decider == 0 then
 			@last_word = "adjective"
-			return select_from(@adjectives)
+			return @adjectives.next
 		else
 			@last_word = "noun"
-			return select_from(@nouns)
+			return @nouns.next
 		end
 	end
 
@@ -145,10 +154,10 @@ class Sonnetbot
 		decider = rand(4)
 		if decider == 0 then
 			@last_word = "adjective"
-			return ", " + select_from(@adjectives)
+			return @adjectives.next
 		else
 			@last_word = "noun"
-			return "  " + select_from(@nouns)
+			return @nouns.next
 		end
 	end
 
@@ -158,11 +167,11 @@ class Sonnetbot
 			if @complete_clause == true
 				@last_word = "conjunction"
 				@complete_clause = false
-				return select_from(@conjunctions)
+				return @conjunctions.next
 			else
 				@last_word = "and"
 				@curr_syllable = curr_syllable + 1
-				return "and"
+				return Word.new("and", ["AH0 N D"])
 			end
 		elsif decider == 1 then
 			return prepositional_phrase
@@ -170,9 +179,9 @@ class Sonnetbot
 			@last_word = "verb"
 			@complete_clause = true
 			if @plural == true then
-				return select_from(@verbs)
+				return @verbs.next
 			else
-				return make_present_tense(select_from(@verbs))
+				return make_present_tense(@verbs.next)
 			end
 		end
 	end
@@ -181,19 +190,19 @@ class Sonnetbot
 		decider = rand(4)
 		if decider == 0 then
 			@last_word = "adverb"
-			return " #{select_from(@adverbs)}"
+			return @adverbs.next
 		elsif decider == 1 then
 			decider2 = rand(4)
 			if decider2 == 0
 				@last_word = "conjunction"
-				return ", #{select_from(@conjunctions)}"
+				return @conjunctions.next
 			else
 				@last_word = "and"
 				@curr_syllable = curr_syllable + 1
-				return " and"
+				return Word.new("and", ["AH0 N D"])
 			end
 		elsif decider == 2 then
-			return " " + prepositional_phrase()
+			return prepositional_phrase()
 		else
 			@last_word = "punctuation"
 			return "#{["?", "!", "."].sample}"
@@ -204,10 +213,10 @@ class Sonnetbot
 		decider = rand(4)
 		if decider == 0 then
 			@last_word = "adverb"
-			return ", #{select_from(@adverbs)}"
+			return @adverbs.next
 		elsif decider == 1 then
 			@last_word = "conjunction"
-			return ", #{select_from(@conjunctions)}"
+			return @conjunctions.next
 		else
 			@last_word = "punctuation"
 			return "#{["?", "!", "."].sample}"
@@ -224,9 +233,9 @@ class Sonnetbot
 			@complete_clause = true
 			@last_word = "verb"
 			if @plural == true then
-				return select_from(@verbs)
+				return @verbs.next
 			else
-				return make_present_tense(select_from(@verbs))
+				return make_present_tense(@verbs.next)
 			end
 		else
 			# make a compound sentence, start a new clause
@@ -237,18 +246,28 @@ class Sonnetbot
 	end
 
 	def make_present_tense(verb)
-		if verb.get_spelling.end_with?("s") or verb.get_spelling.end_with?("h")
-			return verb.get_spelling + "es"
+		if verb.spelling.end_with?("s") or verb.spelling.end_with?("h")
+			new_verb = dict_reader.single_word(verb.spelling + "es")
 		else 
-			return verb.get_spelling + "s"
+			new_verb = dict_reader.single_word(verb.spelling + "s")
 		end
+
+		while new_verb.pronunciations.empty?
+			if verb.spelling.end_with?("s") or verb.spelling.end_with?("h")
+				new_verb = dict_reader.single_word(verb.spelling + "es")
+			else 
+				new_verb = dict_reader.single_word(verb.spelling + "s")
+			end
+		end
+
+		return new_verb
 	end
 
 
 	########## poetic methods: for choosing the right words ##########
 
 	def scans?(word)
-		for stress_pattern in word.get_stress_patterns
+		for stress_pattern in word.stress_patterns
 			correct_stress = @meter.slice(@curr_syllable - 1, stress_pattern.length)
 			# puts stress_pattern
 			# puts correct_stress
@@ -260,7 +279,18 @@ class Sonnetbot
 		return false
 	end
 
-	def rhymes?(word1, word2)
+	def rhymes?(word)
+		if @rhyming_with == nil
+			return true
+		else
+			if rhymes_with?(word, @rhyming_with)
+				return true
+			end
+		end
+		return false
+	end
+
+	def rhymes_with?(word1, word2)
 		if !(last_syls(word1) & last_syls(word2)).empty?
 			# if there's an overlap in the ways the two words can be pronounced
 			return true
@@ -286,20 +316,20 @@ class Sonnetbot
 		return last_syls
 	end
 
-	def select_from(list)
-		curr_word = list.sample
-		while !scans?(curr_word)
-			curr_word = list.sample
-		end
-		return curr_word.spelling
-	end
+	# def select_from(list)
+	# 	curr_word = list.sample
+	# 	while !scans?(curr_word)
+	# 		curr_word = list.sample
+	# 	end
+	# 	return curr_word.spelling
+	# end
 
-	def get_nouns
-		return @nouns
-	end
+	# def get_nouns
+	# 	return @nouns
+	# end
 
-	def get_verbs
-		return @verbs
-	end
+	# def get_verbs
+	# 	return @verbs
+	# end
 
 end

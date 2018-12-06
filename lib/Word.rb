@@ -1,3 +1,5 @@
+require_relative 'DictReader.rb'
+
 class Word
 
 	def initialize(spelling, pronunciation_array)
@@ -41,19 +43,19 @@ class Word
 		return string
 	end
 
-	def get_spelling
+	def spelling
 		return @spelling
 	end
 
-	def get_pronunciations
+	def pronunciations
 		return @pronunciations
 	end
 
-	def get_stress_patterns
+	def stress_patterns
 		return @stress_patterns
 	end
 
-	def get_nums_syllables
+	def nums_syllables
 		return @nums_syllables
 	end
 

@@ -6,4 +6,4 @@ sonnetbot = Sonnetbot.new
 # puts sonnetbot.get_nouns.final
 # puts sonnetbot.get_nouns.final.empty?
 
-# puts sonnetbot.make_sentence()
+puts sonnetbot.make_sentence()

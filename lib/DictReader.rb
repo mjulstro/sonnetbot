@@ -1,4 +1,5 @@
 require_relative 'Word.rb'
+require_relative 'Part_of_Speech.rb'
 
 class DictReader
 
@@ -55,6 +56,20 @@ class DictReader
 		return @parts_of_speech
 	end
 
+	def single_word(word)
+		pronunciation_array = Array.new
+		File.foreach("/Users/Marie/Documents/GitHub/sonnetbot/lib/cmudict.txt") do |line|
+			if line.start_with?(word.upcase) and [" ", "("].include?(line[word.length()])
+				# all the characters before the first " " in that
+				# string comprise the word; everything else is the
+				# pronunciation
+				pronunciation = line.split(' ')[1..-1].join(' ')
+				@pronunciation_array << pronunciation
+			end
+		end
+		return Word.new(word, pronunciation_array)
+	end
+
 	def initialize_current_word_array
 		@curr_word_pos = @next_word_pos
 		@next_word = "zzzzzzzzzzzzz"
@@ -69,43 +84,6 @@ class DictReader
 		end
 		@next_word_pos.increment
 		@pronunciation_array = Array.new  # this word's pronunciations
-	end
-
-	class Part_of_Speech
-		def initialize(old_list, key)
-			@key = key
-			@old_list = old_list.sort_by { |word| word.downcase }
-			@new_list = Array.new
-			@index = 0
-		end
-
-		def key
-			return @key
-		end
-
-		def increment
-			@index += 1
-		end
-
-		def add(word)
-			@new_list << word
-		end
-
-		def first
-			return @old_list[@index]
-		end
-
-		def final
-			return @new_list
-		end
-
-		def done?
-			if @index >= @old_list.length
-				return true
-			else
-				return false
-			end
-		end
 	end
 
 end
