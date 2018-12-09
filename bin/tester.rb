@@ -24,6 +24,4 @@ def test_scansion
 end
 
 sonnetbot = Sonnetbot.new
-puts sonnetbot.make_sentence()
-
-# puts sonnetbot.make_sentence()
+puts sonnetbot.make_sonnet()

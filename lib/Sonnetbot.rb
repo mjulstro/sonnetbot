@@ -52,16 +52,16 @@ class Sonnetbot
 
 		# keep adding sentences to the sonnet
 		# until we reach the last syllable of the last line
-		while !(@curr_line >= num_lines and @curr_syllable >= meter.length)
+		while @curr_line <= num_lines and @curr_syllable <= meter.length
 			sonnet << " " << sentence_to_text(sentence)
 		end
 
 		return sonnet
 	end
 
-	def make_sentence
-		return sentence_to_text(sentence)
-	end
+	# def make_sentence
+	# 	return sentence_to_text(sentence)
+	# end
 
 	def sentence_to_text(array)
 		text = ""
@@ -110,7 +110,7 @@ class Sonnetbot
 			pos.reset  # so we don't get the same words being chosen every time
 		end
 
-		puts "Starting a sentence!"
+		# puts "Starting a sentence!"
 		
 		sentence = clause
 		decider = rand(4)
@@ -177,7 +177,7 @@ class Sonnetbot
 		end
 		while decider == 0
 			decider = rand(2)
-			subj << "COMMA".concat(choose(@adjectives))
+			(subj << "COMMA").concat(choose(@adjectives))
 		end
 
 		# "My hungry, sweet dog"
@@ -205,7 +205,7 @@ class Sonnetbot
 		end
 		while decider == 0
 			decider = rand(4)
-			pred << "COMMA".concat(choose(@adverbs))
+			(pred << "COMMA").concat(choose(@adverbs))
 		end
 
 		# puts pred
