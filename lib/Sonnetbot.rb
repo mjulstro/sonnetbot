@@ -25,8 +25,6 @@ class Sonnetbot
 		@conjunctions = @pos_hash["conjunctions"]
 		@prepositions = @pos_hash["prepositions"]
 
-		# puts @adjectives.final
-
 		# grammatical state variables
 		@last_word = ""
 		@complete_clause = false
@@ -68,20 +66,16 @@ class Sonnetbot
 		end
 
 		puts "Starting a sentence!"
-		# useless_variable = gets
 		@complete_clause = false
 		@plural = false
-		sentence = start_predicate().spelling
+		sentence = start_subject().spelling
 
 		while @last_word != "punctuation"
-			puts sentence + " ~"
 			next_word = follow
 			while !scans?(next_word) or !rhymes?(next_word)
-				# puts "***************************************"
-				# useless_variable = gets
 				next_word = follow
-				puts next_word + " ***"
 			end
+			@curr_syllable += @curr_add
 			sentence = sentence + " " + next_word.spelling
 
 			if @curr_syllable >= @meter.length
@@ -116,7 +110,7 @@ class Sonnetbot
 
 	########## grammatical methods: for putting sentences together ##########
 
-	def start_predicate
+	def start_subject
 		decider = rand(6)
 		if decider == 0 then
 			@last_word = "noun"
@@ -235,7 +229,7 @@ class Sonnetbot
 		if @complete_clause == false then
 			# compound subject
 			@plural = true
-			return start_predicate
+			return start_subject
 		elsif @last_word == "and" then
 			# compound predicate
 			@complete_clause = true
@@ -249,7 +243,7 @@ class Sonnetbot
 			# make a compound sentence, start a new clause
 			@complete_clause = false
 			@plural = false
-			return start_predicate
+			return start_subject
 		end
 	end
 
@@ -307,11 +301,11 @@ class Sonnetbot
 
 	def scans?(word)
 		for stress_pattern in word.stress_patterns
-			correct_stress = @meter.slice(@curr_syllable - 1, stress_pattern.length)
-			# puts stress_pattern
-			# puts correct_stress
+			correct_stress = @meter.slice(@curr_syllable, stress_pattern.length)
 			if stress_pattern == correct_stress and @curr_syllable + stress_pattern.length <= @meter.length
-				@curr_syllable = @curr_syllable + stress_pattern.length
+				# if this word is chosen for the poem, this is how many
+				# syllables we'll advance in the line
+				@curr_add = stress_pattern.length
 				return true
 			end
 		end
@@ -340,8 +334,8 @@ class Sonnetbot
 
 	def last_syls(word)
 		last_syls = Array.new
-		for pronunciation in word.get_pronunciations
-			pron_length = word.stress_patterns[word.get_pronunciations.indexOf(pronunciation)].length
+		for pronunciation in word.pronunciations
+			pron_length = word.stress_patterns[word.pronunciations.index(pronunciation)].length
 			# if @curr_syllable + pron_length <= @meter.length - 1
 			# 	return true
 			# 	# return true if this word doesn't put us at the end of the line
