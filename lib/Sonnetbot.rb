@@ -70,6 +70,8 @@ class Sonnetbot
 				text << ","
 			elsif word == " and"
 				text << word
+			elsif word == "NEWLINE"
+				text << "\n"
 			else
 				text << " " << word.spelling
 			end
@@ -81,13 +83,23 @@ class Sonnetbot
 	end
 
 	def choose(pos)
+		array = Array.new
+
 		word = pos.next
 		while !scans?(word) or !rhymes?(word)
 			word = pos.next
 		end
 
 		@curr_syllable += @curr_add  # the length of the pronunciation that scanned for the last word
-		return word
+		array << word
+
+		if @curr_syllable >= @meter.length
+			@curr_syllable = 0
+			@curr_line += 1
+			array << "NEWLINE"
+		end
+
+		return array
 	end
 
 	########## grammatical methods: for putting sentences together ##########
@@ -104,7 +116,7 @@ class Sonnetbot
 		decider = rand(4)
 		while decider == 0
 			decider = rand(4)
-			(sentence << "COMMA" << choose(@conjunctions)).concat(clause)
+			(sentence << "COMMA").concat(choose(@conjunctions)).concat(clause)
 		end
 
 		return sentence
@@ -154,22 +166,22 @@ class Sonnetbot
 		# "My"
 		decider = rand(6)
 		if decider < 5
-			subj << choose(@prefixes)
+			subj.concat(choose(@prefixes))
 		end
 
 		# "My hungry, sweet"
 		decider = rand(2)
 		if decider == 0
 			decider = rand(2)
-			subj << choose(@adjectives)
+			subj.concat(choose(@adjectives))
 		end
 		while decider == 0
 			decider = rand(2)
-			subj << "COMMA" << choose(@adjectives)
+			subj << "COMMA".concat(choose(@adjectives))
 		end
 
 		# "My hungry, sweet dog"
-		subj << choose(@nouns)
+		subj.concat(choose(@nouns))
 
 		# puts subj
 		return subj
@@ -180,20 +192,20 @@ class Sonnetbot
 
 		# "snorts"
 		if plural
-			pred << choose(@verbs)
+			pred.concat(choose(@verbs))
 		else
-			pred << make_present_tense(choose(@verbs))
+			pred.concat(make_present_tense(choose(@verbs)))
 		end
 
 		# "snorts widely, sleepily, joyfully"
 		decider = rand(4)
 		if decider == 0
 			decider = rand(4)
-			pred << choose(@adverbs)
+			pred.concat(choose(@adverbs))
 		end
 		while decider == 0
 			decider = rand(4)
-			pred << "COMMA" << choose(@adverbs)
+			pred << "COMMA".concat(choose(@adverbs))
 		end
 
 		# puts pred
@@ -203,27 +215,23 @@ class Sonnetbot
 	def prep_phrase
 		phrase = Array.new
 
-		phrase << choose(@prepositions)
+		phrase.concat(choose(@prepositions))
 		phrase.concat(subject)
 
 		# puts phrase
 		return phrase
 	end
 
-	def make_present_tense(verb)
+	def make_present_tense(array)
+		verb = array[0]
 		if verb.spelling.end_with?("s") or verb.spelling.end_with?("h")
 			new_verb = @dict_reader.single_word(verb.spelling + "es")
 		else 
 			new_verb = @dict_reader.single_word(verb.spelling + "s")
 		end
 
-		if verb.spelling.end_with?("s") or verb.spelling.end_with?("h")
-			new_verb = @dict_reader.single_word(verb.spelling + "es")
-		else 
-			new_verb = @dict_reader.single_word(verb.spelling + "s")
-		end
-
-		return new_verb
+		array[0] = new_verb
+		return array
 	end
 
 	########## poetic methods: for choosing the right words ##########
