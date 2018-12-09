@@ -1282,8 +1282,6 @@ def fill_nouns
 		"drink",
 		"guess",
 		"minor",
-		"pull",
-		"weird",
 		"wonder",
 		"count",
 		"death",

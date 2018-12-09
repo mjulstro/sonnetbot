@@ -11,10 +11,10 @@ require_relative 'DictReader.rb'
 class Sonnetbot
 
 	def initialize
-		dict_reader = DictReader.new
+		@dict_reader = DictReader.new
 		# vocabulary
 		prefixes = ["a", "the", "my", "your", "his", "her", "their", "our"]
-		@pos_hash = dict_reader.initialize_lists(prefixes,
+		@pos_hash = @dict_reader.initialize_lists(prefixes,
 			fill_adjectives, fill_nouns, fill_verbs, fill_adverbs,
 			fill_conjunctions, fill_prepositions)
 		@prefixes     = @pos_hash["prefixes"]
@@ -68,29 +68,33 @@ class Sonnetbot
 		end
 
 		puts "Starting a sentence!"
+		# useless_variable = gets
 		@complete_clause = false
 		@plural = false
 		sentence = start_predicate().spelling
 
 		while @last_word != "punctuation"
-			puts sentence
-			next_word = follow(sentence)
+			puts sentence + " ~"
+			next_word = follow
 			while !scans?(next_word) or !rhymes?(next_word)
-				next_word = follow(sentence)
+				# puts "***************************************"
+				# useless_variable = gets
+				next_word = follow
+				puts next_word + " ***"
 			end
 			sentence = sentence + " " + next_word.spelling
 
 			if @curr_syllable >= @meter.length
 				sentence + sentence + "\n"
 				@curr_syllable = 0
-				@curr_line = curr_line + 1
+				@curr_line = @curr_line + 1
 			end
 		end
 
 		return sentence.capitalize
 	end
 
-	def follow(sentence)
+	def follow
 		case @last_word
 		when "noun"
 			return follow_noun
@@ -127,16 +131,20 @@ class Sonnetbot
 	end
 
 	def prepositional_phrase
-		phrase = @prepositions.next
-		while !@prepositions.done? and !scans?(phrase)
-			phrase = @prepositions.next
+		phrase = Array.new
+		candidate = @prepositions.next
+		while !@prepositions.done? and !scans?(candidate)
+			candidate = @prepositions.next
 		end
-		phrase = phrase.spelling + " " + start_predicate().spelling
+		phrase << candidate
 
 		while @last_word != "noun" do
-			phrase = phrase + " " + follow(phrase).spelling
+			phrase << follow
 		end
-		return phrase
+		# we have now ended on a noun, and our prepositional
+		# phrase is complete. Time to turn the list into a Word
+		# that can be inserted into the poem.
+		return phrase_to_word(phrase)
 	end
 
 	def follow_prefix
@@ -170,7 +178,7 @@ class Sonnetbot
 				return @conjunctions.next
 			else
 				@last_word = "and"
-				@curr_syllable = curr_syllable + 1
+				@curr_syllable = @curr_syllable + 1
 				return Word.new("and", ["AH0 N D"])
 			end
 		elsif decider == 1 then
@@ -247,20 +255,51 @@ class Sonnetbot
 
 	def make_present_tense(verb)
 		if verb.spelling.end_with?("s") or verb.spelling.end_with?("h")
-			new_verb = dict_reader.single_word(verb.spelling + "es")
+			new_verb = @dict_reader.single_word(verb.spelling + "es")
 		else 
-			new_verb = dict_reader.single_word(verb.spelling + "s")
+			new_verb = @dict_reader.single_word(verb.spelling + "s")
 		end
 
 		while new_verb.pronunciations.empty?
 			if verb.spelling.end_with?("s") or verb.spelling.end_with?("h")
-				new_verb = dict_reader.single_word(verb.spelling + "es")
+				new_verb = @dict_reader.single_word(verb.spelling + "es")
 			else 
-				new_verb = dict_reader.single_word(verb.spelling + "s")
+				new_verb = @dict_reader.single_word(verb.spelling + "s")
 			end
 		end
 
 		return new_verb
+	end
+
+	def phrase_to_word(phrase)
+		# For turning a prepositional phrase--a list of Words--
+		# into a single Word of its own.
+		spelling = ""
+		pronunciations = Array.new
+
+		for word in phrase  # example: ["in", "his", "hat"]
+			spelling += " " + word.spelling  # first "in", then "in his"...
+			if pronunciations.empty?  # on "in"
+				pronunciations = word.pronunciations
+			else
+				# this part runs in exponential time :/
+				for pron1 in pronunciations  # "in", "een" (or whatever)
+					new_prons = Array.new
+					for pron2 in word.pronunciations  # "his", "heyes"
+						new_prons << pron1 + " " + pron2
+					end
+					# new_prons is now all the potential combinations of ways
+					# to pronounce this prepositional phrase. TODO: this might
+					# get dicey later where words are expected to only have
+					# a few pronunciations--prepositional phrases can have an
+					# arbitrarily long number of adjectives and thus can be
+					# potentially infinitely long.
+					pronunciations = new_prons
+				end
+			end
+		end
+
+		return Word.new(spelling, pronunciations)
 	end
 
 
@@ -324,12 +363,12 @@ class Sonnetbot
 	# 	return curr_word.spelling
 	# end
 
-	# def get_nouns
-	# 	return @nouns
-	# end
+	def get_nouns
+		return @nouns
+	end
 
-	# def get_verbs
-	# 	return @verbs
-	# end
+	def get_verbs
+		return @verbs
+	end
 
 end

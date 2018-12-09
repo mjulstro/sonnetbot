@@ -811,7 +811,6 @@ def fill_adjectives
 	 "ordinary",
 	 "original",
 	 "other",
-	 "our",
 	 "outlying",
 	 "outgoing",
 	 "outlandish",

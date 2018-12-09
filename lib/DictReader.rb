@@ -46,6 +46,11 @@ class DictReader
 				@pronunciation_array << pronunciation
 			else
 			 	if line.split(' ')[0] > @next_word.upcase
+			 		word = Word.new(curr_word, @pronunciation_array)
+					@curr_word_pos.add(word)
+
+			 		initialize_current_word_array
+			 		curr_word = @next_word
 			 		initialize_current_word_array
 			 	end
 			end
@@ -53,6 +58,7 @@ class DictReader
 		end
 
 		puts "Done initializing the lists!"
+		# useless_variable = gets
 		return @parts_of_speech
 	end
 
@@ -82,6 +88,7 @@ class DictReader
 				end
 			end
 		end
+		# puts @next_word + "\t" + @next_word_pos.key
 		@next_word_pos.increment
 		@pronunciation_array = Array.new  # this word's pronunciations
 	end
