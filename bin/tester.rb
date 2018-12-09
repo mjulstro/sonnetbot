@@ -23,6 +23,7 @@ def test_scansion
 	puts sonnetbot.scans?(Word.new("compound", ["K AA1 M P AW0 N D", "K AH0 M P AW1 N D"]))
 end
 
-test_scansion
+sonnetbot = Sonnetbot.new
+puts sonnetbot.make_sentence()
 
 # puts sonnetbot.make_sentence()

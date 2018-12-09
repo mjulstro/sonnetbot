@@ -30,9 +30,9 @@ class Part_of_Speech
 	def next
 		ret = @new_list[@index]
 		@index += 1
-		# if @index >= @new_list.length
-		# 	@index = 0
-		# end
+		if @index >= @new_list.length
+			@index = 0
+		end
 		return ret
 	end
 
