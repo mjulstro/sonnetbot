@@ -15,7 +15,7 @@ end
 
 def test_scansion
 	sonnetbot = Sonnetbot.new
-	# these should print false-false-true-true
+	# these should print true-false-true-true
 	# TODO: turn this into a real unit test and make these asserts
 	puts sonnetbot.scans?(Word.new("he", ["HH IY1"]))
 	puts sonnetbot.scans?(Word.new("compliments", ["K AA1 M P L AH0 M EH0 N T S"]))

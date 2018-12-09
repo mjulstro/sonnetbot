@@ -32,6 +32,7 @@ class Part_of_Speech
 		@index += 1
 		if @index >= @new_list.length
 			@index = 0
+			# return nil
 		end
 		return ret
 	end

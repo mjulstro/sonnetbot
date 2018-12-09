@@ -35,49 +35,55 @@ class Sonnetbot
 		@curr_syllable = 0
 		@rhyming_with = nil
 		@meter = "x/x/x/x/x/"
-		@rhyme_scheme = "ABAB CDCD EFEF GG"
+		@rhyme_scheme = "ABABCDCDEFEFGG"
 	end
 
 
 	########## primary methods: the meat and bones ##########
 
-	def make_sonnet(num_lines = 14, meter = "x/x/x/x/x/", rhyme_scheme = "ABAB CDCD EFEF GG")
+	def make_sonnet(num_lines = 14, meter = "x/x/x/x/x/", rhyme_scheme = "ABABCDCDEFEFGG")
 		@curr_line = 0
 		@curr_syllable = 0
 		@rhyming_with = nil
 		@meter = meter
 		@rhyme_scheme = rhyme_scheme
 
-		sonnet = ""
+		sonnet = Array.new
 
 		# keep adding sentences to the sonnet
 		# until we reach the last syllable of the last line
 		while @curr_line <= num_lines and @curr_syllable <= meter.length
-			sonnet << " " << sentence_to_text(sentence)
+			sonnet.concat(sentence)
 		end
 
-		return sonnet
+		return to_text(sonnet)
 	end
 
 	# def make_sentence
 	# 	return sentence_to_text(sentence)
 	# end
 
-	def sentence_to_text(array)
+	def to_text(array)
 		text = ""
+		capital = false
 		for word in array
-			if word == "COMMA"
-				text << ","
-			elsif word == " and"
+			if ["?", "!", "."].include?(word)
 				text << word
+				capital = true
+			elsif [",", " and"].include?(word)
+				text << word
+				capital = false
 			elsif word == "NEWLINE"
 				text << "\n"
 			else
-				text << " " << word.spelling
+				if capital
+					text << " " << word.spelling.capitalize
+				else
+					text << " " << word.spelling
+				end
+				capital = false
 			end
 		end
-
-		text << ["?", "!", "."].sample
 
 		return text.lstrip.capitalize
 	end
@@ -97,9 +103,14 @@ class Sonnetbot
 			@curr_syllable = 0
 			@curr_line += 1
 			array << "NEWLINE"
+			update_rhymes
 		end
 
 		return array
+	end
+
+	def update_rhymes
+
 	end
 
 	########## grammatical methods: for putting sentences together ##########
@@ -116,7 +127,7 @@ class Sonnetbot
 		decider = rand(4)
 		while decider == 0
 			decider = rand(4)
-			(sentence << "COMMA").concat(choose(@conjunctions)).concat(clause)
+			(sentence << ",").concat(choose(@conjunctions)).concat(clause)
 		end
 
 		return sentence
@@ -177,7 +188,7 @@ class Sonnetbot
 		end
 		while decider == 0
 			decider = rand(2)
-			(subj << "COMMA").concat(choose(@adjectives))
+			(subj << ",").concat(choose(@adjectives))
 		end
 
 		# "My hungry, sweet dog"
@@ -205,7 +216,7 @@ class Sonnetbot
 		end
 		while decider == 0
 			decider = rand(4)
-			(pred << "COMMA").concat(choose(@adverbs))
+			(pred << ",").concat(choose(@adverbs))
 		end
 
 		# puts pred
@@ -250,14 +261,11 @@ class Sonnetbot
 	end
 
 	def rhymes?(word)
-		if @rhyming_with == nil
+		if @rhyming_with == nil or @curr_syllable < @meter.length or rhymes_with?(word, @rhyming_with)
 			return true
 		else
-			if rhymes_with?(word, @rhyming_with)
-				return true
-			end
+			return false
 		end
-		return false
 	end
 
 	def rhymes_with?(word1, word2)
