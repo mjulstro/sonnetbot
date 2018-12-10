@@ -65,15 +65,27 @@ class Sonnetbot
 
 	def to_text(array)
 		text = ""
-		capital = false
+		capital = true
+		ind = 0
+		skip_next = false
 		for word in array
 			if ["?", "!", "."].include?(word)
-				text << word
+				if !skip_next
+					text << word
+				end
+				skip_next = false
 				capital = true
 			elsif [",", " and"].include?(word)
-				text << word
+				if !skip_next
+					text << word
+				end
+				skip_next = false
 				capital = false
 			elsif word == "NEWLINE"
+				if ["?", "!", ".", ","].include?(array[ind + 1])
+					text << array[ind + 1]
+					skip_next = true
+				end
 				text << "\n"
 			else
 				if capital
@@ -83,9 +95,10 @@ class Sonnetbot
 				end
 				capital = false
 			end
+			ind += 1
 		end
 
-		return text.lstrip.capitalize
+		return text
 	end
 
 	def choose(pos)
@@ -122,13 +135,15 @@ class Sonnetbot
 		end
 
 		# puts "Starting a sentence!"
-		
+
 		sentence = clause
 		decider = rand(4)
 		while decider == 0
 			decider = rand(4)
 			(sentence << ",").concat(choose(@conjunctions)).concat(clause)
 		end
+
+		sentence << ["?", "!", "."].sample
 
 		return sentence
 	end
@@ -237,7 +252,7 @@ class Sonnetbot
 		verb = array[0]
 		if verb.spelling.end_with?("s") or verb.spelling.end_with?("h")
 			new_verb = @dict_reader.single_word(verb.spelling + "es")
-		else 
+		else
 			new_verb = @dict_reader.single_word(verb.spelling + "s")
 		end
 

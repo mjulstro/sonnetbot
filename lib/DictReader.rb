@@ -21,7 +21,7 @@ class DictReader
 
 		# iterate over the lines in the CMU Dict comparing them
 		# to the word in the lists that's alphabetically first
-		File.foreach("/Users/Marie/Documents/GitHub/sonnetbot/lib/cmudict.txt") do |line|
+		File.foreach("lib/cmudict.txt") do |line|
 			if @next_word == "zzzzzzzzzzzzz"
 				word = Word.new(curr_word, @pronunciation_array)
 				@curr_word_pos.add(word)
@@ -39,7 +39,7 @@ class DictReader
 				word = Word.new(curr_word, @pronunciation_array)
 				@curr_word_pos.add(word)
 				curr_word = @next_word
-				
+
 				initialize_current_word_array
 
 				pronunciation = line.split(' ')[1..-1].join(' ')
@@ -64,7 +64,7 @@ class DictReader
 
 	def single_word(word)
 		pronunciation_array = Array.new
-		File.foreach("/Users/Marie/Documents/GitHub/sonnetbot/lib/cmudict.txt") do |line|
+		File.foreach("lib/cmudict.txt") do |line|
 			if line.start_with?(word.upcase) and [" ", "("].include?(line[word.length()])
 				# all the characters before the first " " in that
 				# string comprise the word; everything else is the
