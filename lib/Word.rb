@@ -32,15 +32,16 @@ class Word
 	end
 
 	def to_s
-		string = @spelling + "\n"
-		for list in [@pronunciations, @stress_patterns, @nums_syllables]
-			for item in list
-				string << item.to_s + " "
-			end
-			string << "\n"
-		end
-		string << "\n"
-		return string
+		# string = @spelling + "\n"
+		# for list in [@pronunciations, @stress_patterns, @nums_syllables]
+		# 	for item in list
+		# 		string << item.to_s + " "
+		# 	end
+		# 	string << "\n"
+		# end
+		# string << "\n"
+		# return string
+		return spelling
 	end
 
 	def spelling

@@ -48,15 +48,15 @@ class Sonnetbot
 		@meter = meter
 		@rhyme_scheme = rhyme_scheme
 
-		sonnet = Array.new
+		@sonnet = Array.new
 
 		# keep adding sentences to the sonnet
 		# until we reach the last syllable of the last line
 		while @curr_line <= num_lines and @curr_syllable <= meter.length
-			sonnet.concat(sentence)
+			@sonnet.concat(sentence)
 		end
 
-		return to_text(sonnet)
+		return to_text(@sonnet)
 	end
 
 	# def make_sentence
@@ -116,6 +116,7 @@ class Sonnetbot
 			@curr_syllable = 0
 			@curr_line += 1
 			array << "NEWLINE"
+			puts array
 			update_rhymes
 		end
 
@@ -123,7 +124,30 @@ class Sonnetbot
 	end
 
 	def update_rhymes
+		this_line = @rhyme_scheme.slice(@curr_line)
+		before = @rhyme_scheme.slice(0, @curr_line)
 
+		if before.include?(this_line)
+			line_num = before.index(this_line)
+			
+			num_newlines_seen = 0
+			last_newline_seen = 0
+			while num_newlines_seen < line_num
+				intermediate_sonnet = @sonnet.slice((last_newline_seen + 1)..-1)
+				last_newline_seen = @sonnet.index("NEWLINE") - 1
+				num_newlines_seen += 1
+			end
+
+			ind = 1
+			word = intermediate_sonnet[last_newline_seen - ind]
+			while !word.is_a?(Word)
+				ind += 1
+				word = intermediate_sonnet[last_newline_seen - ind]
+			end
+		end
+
+		@rhyming_with = word
+		puts @rhyming_with
 	end
 
 	########## grammatical methods: for putting sentences together ##########
