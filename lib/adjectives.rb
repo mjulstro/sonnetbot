@@ -1144,8 +1144,6 @@ def fill_adjectives
 	 "terrific",
 	 "testy",
 	 "thankful",
-	 "that",
-	 "these",
 	 "thick",
 	 "thin",
 	 "third",
