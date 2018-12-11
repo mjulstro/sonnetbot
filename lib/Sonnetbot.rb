@@ -116,7 +116,7 @@ class Sonnetbot
 			@curr_syllable = 0
 			@curr_line += 1
 			array << "NEWLINE"
-			puts array
+			# puts array
 			update_rhymes
 		end
 
@@ -124,30 +124,30 @@ class Sonnetbot
 	end
 
 	def update_rhymes
-		this_line = @rhyme_scheme.slice(@curr_line)
-		before = @rhyme_scheme.slice(0, @curr_line)
+		# this_line = @rhyme_scheme.slice(@curr_line)
+		# before = @rhyme_scheme.slice(0, @curr_line)
 
-		if before.include?(this_line)
-			line_num = before.index(this_line)
+		# if before.include?(this_line)
+		# 	line_num = before.index(this_line)
 			
-			num_newlines_seen = 0
-			last_newline_seen = 0
-			while num_newlines_seen < line_num
-				intermediate_sonnet = @sonnet.slice((last_newline_seen + 1)..-1)
-				last_newline_seen = @sonnet.index("NEWLINE") - 1
-				num_newlines_seen += 1
-			end
+		# 	num_newlines_seen = 0
+		# 	last_newline_seen = 0
+		# 	while num_newlines_seen < line_num
+		# 		intermediate_sonnet = @sonnet.slice((last_newline_seen + 1)..-1)
+		# 		last_newline_seen = @sonnet.index("NEWLINE") - 1
+		# 		num_newlines_seen += 1
+		# 	end
 
-			ind = 1
-			word = intermediate_sonnet[last_newline_seen - ind]
-			while !word.is_a?(Word)
-				ind += 1
-				word = intermediate_sonnet[last_newline_seen - ind]
-			end
-		end
+		# 	ind = 1
+		# 	word = intermediate_sonnet[last_newline_seen - ind]
+		# 	while !word.is_a?(Word)
+		# 		ind += 1
+		# 		word = intermediate_sonnet[last_newline_seen - ind]
+		# 	end
+		# end
 
-		@rhyming_with = word
-		puts @rhyming_with
+		# @rhyming_with = word
+		# puts @rhyming_with
 	end
 
 	########## grammatical methods: for putting sentences together ##########
@@ -185,11 +185,11 @@ class Sonnetbot
 			plural = true
 		end
 
-		decider = rand(4)
-		while decider == 0
-			decider = rand(4)
-			clause.concat(prep_phrase)
-		end
+		# decider = rand(4)
+		# while decider == 0
+		# 	decider = rand(4)
+		# 	clause.concat(prep_phrase)
+		# end
 
 		clause.concat(predicate(plural))
 		decider = rand(4)
@@ -200,11 +200,11 @@ class Sonnetbot
 			clause.concat(predicate(plural))
 		end
 
-		decider = rand(4)
-		while decider == 0
-			decider = rand(4)
-			clause.concat(prep_phrase)
-		end
+		# decider = rand(4)
+		# while decider == 0
+		# 	decider = rand(4)
+		# 	clause.concat(prep_phrase)
+		# end
 
 		# puts clause
 		return clause
@@ -233,6 +233,13 @@ class Sonnetbot
 		# "My hungry, sweet dog"
 		subj.concat(choose(@nouns))
 
+		# "My hungry, sweet dog with a green tail"
+		decider = rand(4)
+		while decider == 0
+			decider = rand(4)
+			subj.concat(prep_phrase)
+		end
+
 		# puts subj
 		return subj
 	end
@@ -256,6 +263,13 @@ class Sonnetbot
 		while decider == 0
 			decider = rand(4)
 			(pred << ",").concat(choose(@adverbs))
+		end
+
+		# "snorts widely, sleepily, joyfully in a park"
+		decider = rand(4)
+		while decider == 0
+			decider = rand(4)
+			pred.concat(prep_phrase)
 		end
 
 		# puts pred
