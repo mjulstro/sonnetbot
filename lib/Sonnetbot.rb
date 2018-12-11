@@ -105,8 +105,12 @@ class Sonnetbot
 		array = Array.new
 
 		word = pos.next
+		orig_word = word
 		while !scans?(word) or !rhymes?(word)
 			word = pos.next
+			if word == orig_word
+				return nil
+			end
 		end
 
 		@curr_syllable += @curr_add  # the length of the pronunciation that scanned for the last word
@@ -116,43 +120,68 @@ class Sonnetbot
 			@curr_syllable = 0
 			@curr_line += 1
 			array << "NEWLINE"
-			# puts array
-			update_rhymes
+			@rhyming_with = update_rhymes
+
+			# TODO: update_rhymes is looking for "NEWLINE" in @sonnet, but array has
+			# not yet been added to @sonnet, nor has anything in the grammatical
+			# structure that preceded it. We will need to either add words to @sonnet
+			# as their phrases are being selected, or pass the phrase hierarchy into
+			# choose() and thereby update_rhymes() somehow.
 		end
 
 		return array
 	end
 
 	def update_rhymes
-		# this_line = @rhyme_scheme.slice(@curr_line)
-		# before = @rhyme_scheme.slice(0, @curr_line)
+		this_line = @rhyme_scheme.slice(@curr_line)
+		before = @rhyme_scheme.slice(0, @curr_line)
 
-		# if before.include?(this_line)
-		# 	line_num = before.index(this_line)
-			
-		# 	num_newlines_seen = 0
-		# 	last_newline_seen = 0
-		# 	while num_newlines_seen < line_num
-		# 		intermediate_sonnet = @sonnet.slice((last_newline_seen + 1)..-1)
-		# 		last_newline_seen = @sonnet.index("NEWLINE") - 1
-		# 		num_newlines_seen += 1
-		# 	end
+		if before.include?(this_line)
+			line_num = before.index(this_line)
 
-		# 	ind = 1
-		# 	word = intermediate_sonnet[last_newline_seen - ind]
-		# 	while !word.is_a?(Word)
-		# 		ind += 1
-		# 		word = intermediate_sonnet[last_newline_seen - ind]
-		# 	end
-		# end
+			num_newlines_seen = 0
+			last_newline_seen = 0
+			while num_newlines_seen <= line_num
+				intermediate_sonnet = @sonnet.slice((last_newline_seen + 1)..-1)
+				last_newline_seen = @sonnet.index("NEWLINE") - 1
+				num_newlines_seen += 1
+			end
 
-		# @rhyming_with = word
-		# puts @rhyming_with
+			ind = 1
+			word = intermediate_sonnet[last_newline_seen - ind]
+			while !word.is_a?(Word)
+				ind += 1
+				word = intermediate_sonnet[last_newline_seen - ind]
+			end
+		else
+			return nil
+		end
+
+		return word
+		puts word
 	end
 
 	########## grammatical methods: for putting sentences together ##########
 
 	def sentence
+		# Wrapper function for making subjects. Redoes the creation of the subject
+		# up to five times if no scanning set of words is found.
+		sent = make_sentence
+
+		if !sent.include?(nil)
+			return sent
+		else
+			for i in range(0..5)
+				sent = make_sent
+				if !sent.include?(nil)
+					return sent
+				end
+			end
+			return nil
+		end
+	end
+
+	def make_sentence
 		for pos in @pos_hash.values
 			pos.shuffle
 			pos.reset  # so we don't get the same words being chosen every time
@@ -173,60 +202,80 @@ class Sonnetbot
 	end
 
 	def clause
+		# Wrapper function for making subjects. Redoes the creation of the subject
+		# up to five times if no scanning set of words is found.
+		cls = make_clause
+
+		if !cls.include?(nil)
+			return cls
+		else
+			for i in range(0..5)
+				cls = make_clause
+				if !cls.include?(nil)
+					return cls
+				end
+			end
+			return nil
+		end
+	end
+
+	def make_clause
 		plural = false
 
-		clause = subject
-		decider = rand(4)
-		while decider == 0
-			decider = rand(4)
-			clause << " and"
+		cls = Array.new
+		while rand(6) == 0
+			cls.concat(prep_phrase)
+		end
+
+		cls.concat(subject)
+		while rand(4) == 0
+			cls << " and"
 			@curr_syllable += 1
-			clause.concat(subject)
+			cls.concat(subject)
 			plural = true
 		end
 
-		# decider = rand(4)
-		# while decider == 0
-		# 	decider = rand(4)
-		# 	clause.concat(prep_phrase)
-		# end
-
-		clause.concat(predicate(plural))
-		decider = rand(4)
-		while decider == 0
-			decider = rand(4)
-			clause << " and"
+		cls.concat(predicate(plural))
+		while rand(4) == 0
+			cls << " and"
 			@curr_syllable += 1
-			clause.concat(predicate(plural))
+			cls.concat(predicate(plural))
 		end
 
-		# decider = rand(4)
-		# while decider == 0
-		# 	decider = rand(4)
-		# 	clause.concat(prep_phrase)
-		# end
-
-		# puts clause
-		return clause
+		return cls
 	end
 
 	def subject
+		# Wrapper function for making subjects. Redoes the creation of the subject
+		# up to five times if no scanning set of words is found.
+		subj = make_subj
+
+		if !subj.include?(nil)
+			return subj
+		else
+			for i in range(0..5)
+				subj = make_subj
+				if !subj.include?(nil)
+					return subj
+				end
+			end
+			return nil
+		end
+	end
+
+	def make_subj
 		subj = Array.new
 
 		# "My"
-		decider = rand(6)
-		if decider < 5
+		if rand(6) < 5
 			subj.concat(choose(@prefixes))
 		end
 
 		# "My hungry, sweet"
-		decider = rand(2)
-		if decider == 0
-			decider = rand(2)
+		if rand(3) == 0
 			subj.concat(choose(@adjectives))
 		end
-		while decider == 0
-			decider = rand(2)
+		while rand(3) == 0
 			(subj << ",").concat(choose(@adjectives))
 		end
 
@@ -234,17 +283,32 @@ class Sonnetbot
 		subj.concat(choose(@nouns))
 
 		# "My hungry, sweet dog with a green tail"
-		decider = rand(4)
-		while decider == 0
-			decider = rand(4)
+		while rand(4) == 0
 			subj.concat(prep_phrase)
 		end
 
-		# puts subj
 		return subj
 	end
 
 	def predicate(plural)
+		# Wrapper function for make_pred like subject is. Could have done this with
+		# metaprogramming, in hindsight.
+		pred = make_pred(plural)
+
+		if !pred.include?(nil)
+			return pred
+		else
+			for i in range(0..5)
+				pred = make_pred(plural)
+				if !pred.include?(nil)
+					return pred
+				end
+			end
+			return nil
+		end
+	end
+
+	def make_pred(plural)
 		pred = Array.new
 
 		# "snorts"
@@ -255,34 +319,45 @@ class Sonnetbot
 		end
 
 		# "snorts widely, sleepily, joyfully"
-		decider = rand(4)
-		if decider == 0
-			decider = rand(4)
+		if rand(4) == 0
 			pred.concat(choose(@adverbs))
 		end
-		while decider == 0
-			decider = rand(4)
+		while rand(4) == 0
 			(pred << ",").concat(choose(@adverbs))
 		end
 
 		# "snorts widely, sleepily, joyfully in a park"
-		decider = rand(4)
-		while decider == 0
-			decider = rand(4)
+		while rand(4) == 0
 			pred.concat(prep_phrase)
 		end
 
-		# puts pred
 		return pred
 	end
 
 	def prep_phrase
+		# Wrapper function for make_pred like subject is. Could have done this with
+		# metaprogramming, in hindsight.
+		prep = make_prep_phrase
+
+		if !prep.include?(nil)
+			return prep
+		else
+			for i in range(0..5)
+				prep = make_prep
+				if !prep.include?(nil)
+					return prep
+				end
+			end
+			return nil
+		end
+	end
+
+	def make_prep_phrase
 		phrase = Array.new
 
 		phrase.concat(choose(@prepositions))
 		phrase.concat(subject)
 
-		# puts phrase
 		return phrase
 	end
 
