@@ -421,7 +421,8 @@ class Sonnetbot
 
 	def rhymes_with?(word1, word2)
 		if !(last_syls(word1) & last_syls(word2)).empty?
-			# if there's an overlap in the ways the two words can be pronounced
+			# if there's an overlap in the ways the two words' last syllables
+			# can be pronounced
 			return true
 		else
 			return false

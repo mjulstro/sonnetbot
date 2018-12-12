@@ -5,7 +5,7 @@ class Word
 	def initialize(spelling, pronunciation_array)
 		stress_patterns = Array.new
 		nums_syllables = Array.new
-		
+
 		for pronunciation in pronunciation_array
 			stress_patterns << find_stress_pattern(pronunciation)
 			nums_syllables << pronunciation.scan(/0|1|2/).size
@@ -31,17 +31,16 @@ class Word
 		return stress_pattern
 	end
 
-	def to_s
-		# string = @spelling + "\n"
-		# for list in [@pronunciations, @stress_patterns, @nums_syllables]
-		# 	for item in list
-		# 		string << item.to_s + " "
-		# 	end
-		# 	string << "\n"
-		# end
-		# string << "\n"
-		# return string
-		return spelling
+	def all_info
+		string = @spelling + "\n"
+		for list in [@pronunciations, @stress_patterns, @nums_syllables]
+			for item in list
+				string << item.to_s + " "
+			end
+			string << "\n"
+		end
+		string << "\n"
+		return string
 	end
 
 	def spelling
