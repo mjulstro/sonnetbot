@@ -7,6 +7,7 @@ require_relative 'prepositions.rb'
 require_relative 'Word.rb'
 require_relative 'Part_of_Speech.rb'
 require_relative 'DictReader.rb'
+require_relative 'Marker.rb'
 
 class Sonnetbot
 
@@ -24,36 +25,24 @@ class Sonnetbot
 		@adverbs      = @pos_hash["adverbs"]
 		@conjunctions = @pos_hash["conjunctions"]
 		@prepositions = @pos_hash["prepositions"]
-
-		# grammatical state variables
-		@last_word = ""
-		@complete_clause = false
-		@plural = false
-
-		# poetic state variables
-		@curr_line = 0
-		@curr_syllable = 0
-		@rhyming_with = nil
-		@meter = "x/x/x/x/x/"
-		@rhyme_scheme = "ABABCDCDEFEFGG"
 	end
 
 
 	########## primary methods: the meat and bones ##########
 
 	def make_sonnet(num_lines = 14, meter = "x/x/x/x/x/", rhyme_scheme = "ABABCDCDEFEFGG")
+		# poetic state variables
+		@sonnet = Array.new
 		@curr_line = 0
 		@curr_syllable = 0
 		@rhyming_with = nil
-		@meter = meter
-		@rhyme_scheme = rhyme_scheme
-
-		@sonnet = Array.new
+		@meter = "x/x/x/x/x/"
+		@rhyme_scheme = "ABABCDCDEFEFGG"
 
 		# keep adding sentences to the sonnet
 		# until we reach the last syllable of the last line
-		while @curr_line <= num_lines and @curr_syllable <= meter.length
-			@sonnet.concat(sentence)
+		while @curr_line <= num_lines and @curr_syllable < meter.length
+			@sonnet.concat(make(method(:sentence)))
 		end
 
 		return to_text(@sonnet)
@@ -81,12 +70,14 @@ class Sonnetbot
 				end
 				skip_next = false
 				capital = false
-			elsif word == "NEWLINE"
+			elsif word == "\n"
 				if ["?", "!", ".", ","].include?(array[ind + 1])
 					text << array[ind + 1]
 					skip_next = true
 				end
 				text << "\n"
+			elsif word.is_a?(Marker)
+				next
 			else
 				if capital
 					text << " " << word.spelling.capitalize
@@ -101,36 +92,27 @@ class Sonnetbot
 		return text
 	end
 
-	def choose(pos, so_far)
+	def choose(pos)
 		array = Array.new
-
-		sonnet_so_far = @sonnet + so_far
 
 		word = pos.next
 		orig_word = word
-		while !scans?(word, sonnet_so_far) or !rhymes?(word, sonnet_so_far)
+		while !scans?(word) or !rhymes?(word)
 			word = pos.next
 			if word == orig_word
 				return nil
 			end
 		end
 
-		curr_line = sonnet_so_far.rindex("NEWLINE")
-
-		curr_syllable += @curr_add  # the length of the pronunciation that scanned for the last word
+		@curr_syllable += @curr_add  # the length of the pronunciation that scanned for the last word
 		array << word
 
-		if curr_syllable >= @meter.length
+		if @curr_syllable >= @meter.length
 			curr_syllable = 0
 			@curr_line += 1
-			array << "NEWLINE"
-			@rhyming_with = update_rhymes(sonnet_so_far)
+			array << "\n"
+			# @rhyming_with = update_rhymes
 
-			# TODO: update_rhymes is looking for "NEWLINE" in @sonnet, but array has
-			# not yet been added to @sonnet, nor has anything in the grammatical
-			# structure that preceded it. We will need to either add words to @sonnet
-			# as their phrases are being selected, or pass the phrase hierarchy into
-			# choose() and thereby update_rhymes() somehow.
 		end
 
 		# puts "*********************************************************************"
@@ -144,26 +126,24 @@ class Sonnetbot
 		return array
 	end
 
-	def update_rhymes(so_far)
+	def update_rhymes
 		this_line = @rhyme_scheme.slice(@curr_line)
 		before = @rhyme_scheme.slice(0, @curr_line)
 
 		if before != nil and this_line != nil and before.include?(this_line)
 			line_num = before.index(this_line)
 
-			sonnet_so_far = @sonnet + so_far
-
 			num_newlines_seen = 0
 			last_newline_seen = 0
 			while num_newlines_seen <= line_num
-				intermediate_sonnet = sonnet_so_far.slice((last_newline_seen + 1)..-1)
+				intermediate_sonnet = @sonnet.slice((last_newline_seen)..-1)
 				begin
-					last_newline_seen = sonnet_so_far.index("NEWLINE") - 1
+					last_newline_seen = @sonnet.index("\n")
 				rescue
 					puts "************ERROR************"
 					puts this_line + " should rhyme with something in " + before
 					puts "Sonnet so far:"
-					puts sonnet_so_far
+					puts @sonnet
 					puts
 				end
 				num_newlines_seen += 1
@@ -180,30 +160,41 @@ class Sonnetbot
 		end
 
 		return word
-		# puts word
 	end
 
 	########## grammatical methods: for putting sentences together ##########
 
-	def sentence
-		# Wrapper function for making subjects. Redoes the creation of the subject
-		# up to five times if no scanning set of words is found.
-		sent = make_sentence
-
-		if !sent.include?(nil)
-			return sent
-		else
-			for i in range(0..5)
-				sent = make_sent
-				if !sent.include?(nil)
-					return sent
-				end
+	def make(func, param = nil)
+		for i in 0..5
+			if param == nil
+				item = func.call
+			else
+				item = func.call(param)
 			end
-			return nil
+
+			if !item.include?(nil)
+				if @curr_syllable >= @meter.length
+					@curr_syllable = @curr_syllable - @meter.length
+					@curr_line += 1
+				end
+
+				marker = Marker.new("#{func.name}", @curr_syllable, @curr_line)
+				puts marker
+				@sonnet << marker
+				# sonnet.concat(item)
+				return item
+			else
+				# THIS IS WHERE THE BACKTRACKING HAPPENS!
+				# DELETE EVERYTHING AFTER THE LAST MARKER WITH GRAM_UNIT = FUNC.NAME
+				# RESET CURR_SYLLABLE AND CURR_LINE TO WHAT THEY WERE AT THAT LAST MARKER
+				# DELETE THAT MARKER TOO
+			end
 		end
+		return nil
 	end
 
-	def make_sentence
+	def sentence
+		@sonnet << Marker.new("sentence", @curr_syllable, @curr_line)
 		for pos in @pos_hash.values
 			pos.shuffle
 			pos.reset  # so we don't get the same words being chosen every time
@@ -211,10 +202,10 @@ class Sonnetbot
 
 		# puts "Starting a sentence!"
 
-		sentence = clause
+		sentence = make(method(:clause))
 		while rand(4) == 0
 			sentence << ","
-			sentence.concat(choose(@conjunctions, sentence)).concat(clause)
+			sentence.concat(choose(@conjunctions)).concat(make(method(:clause)))
 		end
 
 		sentence << ["?", "!", "."].sample
@@ -223,161 +214,89 @@ class Sonnetbot
 	end
 
 	def clause
-		# Wrapper function for making subjects. Redoes the creation of the subject
-		# up to five times if no scanning set of words is found.
-		cls = make_clause
-
-		if !cls.include?(nil)
-			return cls
-		else
-			for i in range(0..5)
-				cls = make_clause
-				if !cls.include?(nil)
-					return cls
-				end
-			end
-			return nil
-		end
-	end
-
-	def make_clause
 		plural = false
 
 		cls = Array.new
 		while rand(6) == 0
-			cls.concat(prep_phrase(cls))
+			cls.concat(make(method(:prep_phrase)))
 		end
 
-		cls.concat(subject(cls))
+		cls.concat(make(method(:subject)))
 		while rand(4) == 0
 			cls << " and"
 			@curr_syllable += 1
-			cls.concat(subject(cls))
+			cls.concat(make(method(:subject)))
 			plural = true
 		end
 
-		cls.concat(predicate(plural, cls))
+		cls.concat(make(method(:predicate), plural))
 		while rand(4) == 0
 			cls << " and"
 			@curr_syllable += 1
-			cls.concat(predicate(plural, cls))
+			cls.concat(make(method(:predicate), plural))
 		end
 
 		return cls
 	end
 
-	def subject(cls)
-		# Wrapper function for making subjects. Redoes the creation of the subject
-		# up to five times if no scanning set of words is found.
-		subj = make_subj(cls)
-
-		if !subj.include?(nil)
-			return subj
-		else
-			for i in range(0..5)
-				subj = make_subj(cls)
-				if !subj.include?(nil)
-					return subj
-				end
-			end
-			return nil
-		end
-	end
-
-	def make_subj(cls)
+	def subject
 		subj = Array.new
 
 		# "My"
 		if rand(6) < 5
-			subj.concat(choose(@prefixes, cls.concat(subj)))
+			subj.concat(choose(@prefixes))
 		end
 
 		# "My hungry, sweet"
 		if rand(3) == 0
-			subj.concat(choose(@adjectives, cls.concat(subj)))
+			subj.concat(choose(@adjectives))
 		end
 		while rand(3) == 0
-			(subj << ",").concat(choose(@adjectives, cls.concat(subj)))
+			(subj << ",").concat(choose(@adjectives))
 		end
 
 		# "My hungry, sweet dog"
-		subj.concat(choose(@nouns, cls.concat(subj)))
+		subj.concat(choose(@nouns))
 
 		# "My hungry, sweet dog with a green tail"
 		while rand(4) == 0
-			subj.concat(prep_phrase(cls.concat(subj)))
+			subj.concat(make(method(:prep_phrase)))
 		end
 
 		return subj
 	end
 
-	def predicate(plural, cls)
-		# Wrapper function for make_pred like subject is. Could have done this with
-		# metaprogramming, in hindsight.
-		pred = make_pred(plural, cls)
-
-		if !pred.include?(nil)
-			return pred
-		else
-			for i in range(0..5)
-				pred = make_pred(plural, cls)
-				if !pred.include?(nil)
-					return pred
-				end
-			end
-			return nil
-		end
-	end
-
-	def make_pred(plural, cls)
+	def predicate(plural)
 		pred = Array.new
 
 		# "snorts"
 		if plural
-			pred.concat(choose(@verbs, cls.concat(pred)))
+			pred.concat(choose(@verbs))
 		else
-			pred.concat(make_present_tense(choose(@verbs, cls.concat(pred))))
+			pred.concat(make_present_tense(choose(@verbs)))
 		end
 
 		# "snorts widely, sleepily, joyfully"
 		if rand(4) == 0
-			pred.concat(choose(@adverbs, cls.concat(pred)))
+			pred.concat(choose(@adverbs))
 		end
 		while rand(4) == 0
-			(pred << ",").concat(choose(@adverbs, cls.concat(pred)))
+			(pred << ",").concat(choose(@adverbs))
 		end
 
 		# "snorts widely, sleepily, joyfully in a park"
 		while rand(4) == 0
-			pred.concat(prep_phrase(cls.concat(pred)))
+			pred.concat(make(method(:prep_phrase)))
 		end
 
 		return pred
 	end
 
-	def prep_phrase(cls)
-		# Wrapper function for make_pred like subject is. Could have done this with
-		# metaprogramming, in hindsight.
-		prep = make_prep_phrase(cls)
-
-		if !prep.include?(nil)
-			return prep
-		else
-			for i in range(0..5)
-				prep = make_prep_phrase(cls)
-				if !prep.include?(nil)
-					return prep
-				end
-			end
-			return nil
-		end
-	end
-
-	def make_prep_phrase(cls)
+	def prep_phrase
 		phrase = Array.new
 
-		phrase.concat(choose(@prepositions, cls))
-		phrase.concat(subject(cls.concat(phrase)))
+		phrase.concat(choose(@prepositions))
+		phrase.concat(make(method(:subject)))
 
 		return phrase
 	end
@@ -396,10 +315,10 @@ class Sonnetbot
 
 	########## poetic methods: for choosing the right words ##########
 
-	def scans?(word, sonnet_so_far, curr_syllable)
+	def scans?(word)
 		for stress_pattern in word.stress_patterns
-			correct_stress = @meter.slice(curr_syllable, stress_pattern.length)
-			if (stress_pattern == correct_stress and curr_syllable + stress_pattern.length <= @meter.length) or (stress_pattern.length == 1)
+			correct_stress = @meter.slice(@curr_syllable, stress_pattern.length)
+			if (stress_pattern == correct_stress and @curr_syllable + stress_pattern.length <= @meter.length) or (stress_pattern.length == 1)
 				# if this word is chosen for the poem, this is how many
 				# syllables we'll advance in the line
 				@curr_add = stress_pattern.length
@@ -409,10 +328,10 @@ class Sonnetbot
 		return false
 	end
 
-	def rhymes?(word, sonnet_so_far, curr_syllable)
-		#TODO: determine @rhyming_with from sonnet_so_far
+	def rhymes?(word)
+		#TODO: determine @rhyming_with from @sonnet
 
-		if rhyming_with == nil or curr_syllable < @meter.length or rhymes_with?(word, rhyming_with)
+		if @rhyming_with == nil or @curr_syllable + @curr_add < @meter.length or rhymes_with?(word, @rhyming_with)
 			return true
 		else
 			return false
