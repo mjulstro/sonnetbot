@@ -186,8 +186,14 @@ class Sonnetbot
 			else
 				# THIS IS WHERE THE BACKTRACKING HAPPENS!
 				# DELETE EVERYTHING AFTER THE LAST MARKER WITH GRAM_UNIT = FUNC.NAME
+				del_point = @sonnet.rindex { |item| item.is_a?(Marker) and item.gram_unit == func.name}
+				@sonnet.slice!(del_point + 1, -1)
 				# RESET CURR_SYLLABLE AND CURR_LINE TO WHAT THEY WERE AT THAT LAST MARKER
+				marker = @sonnet[del_point]
+				@curr_syllable = marker.syl
+				@curr_line = marker.line
 				# DELETE THAT MARKER TOO
+				@sonnet.pop
 			end
 		end
 		return nil
