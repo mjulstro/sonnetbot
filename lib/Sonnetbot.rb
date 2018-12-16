@@ -212,9 +212,11 @@ class Sonnetbot
 		while rand(4) == 0
 			sentence << ","
 			sentence.concat(choose(@conjunctions)).concat(make(method(:clause)))
+			@sonnet.concat(choose(@conjunctions)).concat(make(method(:clause)))
 		end
 
 		sentence << ["?", "!", "."].sample
+		@sonnet << ["?", "!", "."].sample
 
 		return sentence
 	end
@@ -251,18 +253,22 @@ class Sonnetbot
 		# "My"
 		if rand(6) < 5
 			subj.concat(choose(@prefixes))
+			@sonnet.concat(choose(@prefixes))
 		end
 
 		# "My hungry, sweet"
 		if rand(3) == 0
 			subj.concat(choose(@adjectives))
+			@sonnet.concat(choose(@adjectives))
 		end
 		while rand(3) == 0
 			(subj << ",").concat(choose(@adjectives))
+			(@sonnet << ",").concat(choose(@adjectives))
 		end
 
 		# "My hungry, sweet dog"
 		subj.concat(choose(@nouns))
+		@sonnet.concat(choose(@nouns))
 
 		# "My hungry, sweet dog with a green tail"
 		while rand(4) == 0
@@ -278,16 +284,20 @@ class Sonnetbot
 		# "snorts"
 		if plural
 			pred.concat(choose(@verbs))
+			@sonnet.concat(choose(@verbs))
 		else
 			pred.concat(make_present_tense(choose(@verbs)))
+			@sonnet.concat(make_present_tense(choose(@verbs)))
 		end
 
 		# "snorts widely, sleepily, joyfully"
 		if rand(4) == 0
 			pred.concat(choose(@adverbs))
+			@sonnet.concat(choose(@adverbs))
 		end
 		while rand(4) == 0
 			(pred << ",").concat(choose(@adverbs))
+			(@sonnet << ",").concat(choose(@adverbs))
 		end
 
 		# "snorts widely, sleepily, joyfully in a park"
@@ -302,6 +312,7 @@ class Sonnetbot
 		phrase = Array.new
 
 		phrase.concat(choose(@prepositions))
+		@sonnet.concat(choose(@prepositions))
 		phrase.concat(make(method(:subject)))
 
 		return phrase
