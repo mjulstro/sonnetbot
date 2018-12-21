@@ -1319,7 +1319,6 @@ def fill_nouns
 		"split",
 		"strain",
 		"struggle",
-		"swim",
 		"train",
 		"crash",
 		"dependence",

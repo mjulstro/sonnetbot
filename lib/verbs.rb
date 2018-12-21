@@ -702,6 +702,7 @@ def fill_verbs
 		"reproduce",
 		"request",
 		"rescue",
+		"rest",
 		"retire",
 		"retort",
 		"return",
