@@ -94,19 +94,31 @@ class Sonnetbot
 		array = Array.new
 
 		word = pos.next
+		orig = word
 		while !scans?(word) or !rhymes?(word)
 			word = pos.next
+			if word == orig
+				array << nil
+			end
 		end
 
 		@curr_syllable += @curr_add  # the length of the pronunciation that scanned for the last word
 		array << word
 
 		if @curr_syllable >= @meter.length
-			# update_rhymes(word)
+			update_rhymes(word)
 			@curr_syllable = 0
 			@curr_line += 1
 			array << "NEWLINE"
 			# puts array
+
+			orig = word
+			while !scans?(word) or !rhymes?(word)
+				word = pos.next
+				if word == orig
+					array << nil
+				end
+			end
 		end
 
 		return array
@@ -122,6 +134,7 @@ class Sonnetbot
 			@rhyme_dict[letter] = word
 			@rhyming_with = nil
 		end
+		puts_all_state
 	end
 
 	########## grammatical methods: for putting sentences together ##########
@@ -266,7 +279,9 @@ class Sonnetbot
 	def rhymes?(word)
 		if @rhyming_with == nil or (@curr_syllable + @curr_add) < @meter.length
 			return true
-		elsif !rhymes_with?(word, @rhyming_with)
+		elsif rhymes_with?(word, @rhyming_with)
+			return true
+		else
 			return false
 		end
 	end
