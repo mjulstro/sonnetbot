@@ -102,6 +102,7 @@ class Sonnetbot
 			word = pos.next
 			if word == orig_word
 				array << nil
+				break
 			end
 		end
 
@@ -118,6 +119,7 @@ class Sonnetbot
 				word = pos.next
 				if word == orig_word
 					array << nil
+					break
 				end
 			end
 		end
