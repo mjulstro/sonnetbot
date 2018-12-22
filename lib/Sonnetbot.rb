@@ -118,6 +118,7 @@ class Sonnetbot
 				word = pos.next
 				if word == orig
 					array << nil
+					break
 				end
 			end
 		end
