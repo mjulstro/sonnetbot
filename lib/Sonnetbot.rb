@@ -99,6 +99,7 @@ class Sonnetbot
 			word = pos.next
 			if word == orig
 				array << nil
+				break
 			end
 		end
 
@@ -299,16 +300,21 @@ class Sonnetbot
 		# puts_all_state(word.spelling)
 		last_syls = Array.new
 		for pronunciation in word.pronunciations
-			pron_length = word.stress_patterns[word.pronunciations.index(pronunciation)].length
-			# if @curr_syllable + pron_length <= @meter.length - 1
-			# 	return true
-			# 	# return true if this word doesn't put us at the end of the line
-			# end
+			begin
+				pron_length = word.stress_patterns[word.pronunciations.index(pronunciation)].length
+				# if @curr_syllable + pron_length <= @meter.length - 1
+				# 	return true
+				# 	# return true if this word doesn't put us at the end of the line
+				# end
 
-			last_syl_start = pronunciation.rindex(/\d/) - 2
-			last_syl = pronunciation.slice(last_syl_start..pronunciation.length)
-			last_syl = last_syl.tr('012', '')  # removes stress information; this should be accounted for by the scansion
-			last_syls << last_syl
+				last_syl_start = pronunciation.rindex(/\d/) - 2
+				last_syl = pronunciation.slice(last_syl_start..pronunciation.length)
+				last_syl = last_syl.tr('012', '')  # removes stress information; this should be accounted for by the scansion
+				last_syls << last_syl
+			rescue
+				puts "COULD NOT PROCESS THE FOLLOWING WORD:"
+				puts word.all_info
+			end
 		end
 		return last_syls
 	end
