@@ -127,7 +127,7 @@ class Sonnetbot
 	end
 
 	def update_rhymes(word)
-		puts_all_state(word.spelling)
+		# puts_all_state(word.spelling)
 		letter = @rhyme_scheme[@curr_line]
 
 		if @rhyme_dict.include?(letter)
@@ -136,116 +136,163 @@ class Sonnetbot
 			@rhyme_dict[letter] = word
 			@rhyming_with = nil
 		end
-		puts_all_state
+		# puts_all_state
 	end
 
 	########## grammatical methods: for putting sentences together ##########
 
 	def sentence
-		for pos in @pos_hash.values
-			pos.shuffle
-			pos.reset  # so we don't get the same words being chosen every time
+		syl = @curr_syllable
+		line = @curr_line
+		for i in 0..5
+			for pos in @pos_hash.values
+				pos.shuffle
+				pos.reset  # so we don't get the same words being chosen every time
+			end
+
+			# puts "Starting a sentence!"
+
+			sentence = clause
+			while rand(4) == 0
+				(sentence << ",").concat(choose(@conjunctions)).concat(clause)
+			end
+
+			sentence << ["?", "!", "."].sample
+
+			if !sentence.include?(nil)
+				return sentence
+			end
+			@curr_syllable = syl
+			@curr_line = line
 		end
-
-		# puts "Starting a sentence!"
-
-		sentence = clause
-		while rand(4) == 0
-			(sentence << ",").concat(choose(@conjunctions)).concat(clause)
-		end
-
-		sentence << ["?", "!", "."].sample
-
-		return sentence
 	end
 
 	def clause
-		plural = false
-		clause = Array.new
+		line = @curr_line
+		syl = @curr_syllable
+		for i in 0..5
+			plural = false
+			clause = Array.new
 
-		while rand(4) == 0
-			clause.concat(prep_phrase)
-		end
+			while rand(4) == 0
+				clause.concat(prep_phrase)
+			end
 
-		clause.concat(subject)
-		while rand(4) == 0
-			clause << " and"
-			@curr_syllable += 1
 			clause.concat(subject)
-			plural = true
-		end
+			while rand(4) == 0
+				clause << " and"
+				@curr_syllable += 1
+				clause.concat(subject)
+				plural = true
+			end
 
-		clause.concat(predicate(plural))
-		while rand(4) == 0
-			clause << " and"
-			@curr_syllable += 1
 			clause.concat(predicate(plural))
-		end
+			while rand(4) == 0
+				clause << " and"
+				@curr_syllable += 1
+				clause.concat(predicate(plural))
+			end
 
-		return clause
+			if !clause.include?(nil)
+				return clause
+			end
+			@curr_line = line
+			@curr_syllable = syl
+		end
+		return (Array.new) << nil
 	end
 
 	def subject
-		subj = Array.new
+		line = @curr_line
+		syl = @curr_syllable
+		for i in 0..5
+			subj = Array.new
 
-		# "My"
-		if rand(6) < 5
-			subj.concat(choose(@prefixes))
-		end
-
-		# "My hungry, sweet"
-		if rand(2) == 0
-			subj.concat(choose(@adjectives))
-			while rand(2) == 0
-				(subj << ",").concat(choose(@adjectives))
+			# "My"
+			if rand(6) < 5
+				subj.concat(choose(@prefixes))
 			end
+
+			# "My hungry, sweet"
+			if rand(2) == 0
+				subj.concat(choose(@adjectives))
+				while rand(2) == 0
+					(subj << ",").concat(choose(@adjectives))
+				end
+			end
+
+			# "My hungry, sweet dog"
+			subj.concat(choose(@nouns))
+
+			# "My hungry, sweet dog with a green tail"
+			while rand(4) == 0
+				subj.concat(prep_phrase)
+			end
+
+			if !subj.include?(nil)
+				return subj
+			end
+			@curr_line = line
+			@curr_syllable = syl
 		end
-
-		# "My hungry, sweet dog"
-		subj.concat(choose(@nouns))
-
-		# "My hungry, sweet dog with a green tail"
-		while rand(4) == 0
-			subj.concat(prep_phrase)
-		end
-
-		return subj
+		return (Array.new) << nil
 	end
 
 	def predicate(plural)
-		pred = Array.new
-
-		# "snorts"
-		if plural
-			pred.concat(choose(@verbs))
-		else
-			pred.concat(make_present_tense(choose(@verbs)))
+		line = @curr_line
+		syl = @curr_syllable
+		if choose(@verbs).include?(nil)
+			return (Array.new) << nil
 		end
+		for i in 0..5
+			pred = Array.new
 
-		# "snorts widely, sleepily, joyfully"
-		if rand(4) == 0
-			pred.concat(choose(@adverbs))
-			while rand(4) == 0
-				(pred << ",").concat(choose(@adverbs))
+			# "snorts"
+			if plural
+				pred.concat(choose(@verbs))
+			else
+				pred.concat(make_present_tense(choose(@verbs)))
 			end
 
-		end
+			# "snorts widely, sleepily, joyfully"
+			if rand(4) == 0
+				pred.concat(choose(@adverbs))
+				while rand(4) == 0
+					(pred << ",").concat(choose(@adverbs))
+				end
 
-		# "snorts widely, sleepily, joyfully in a park"
-		while rand(4) == 0
-			pred.concat(prep_phrase)
-		end
+			end
 
-		return pred
+			# "snorts widely, sleepily, joyfully in a park"
+			while rand(4) == 0
+				pred.concat(prep_phrase)
+			end
+
+			if !pred.include?(nil)
+				return pred
+			end
+			@curr_line = line
+			@curr_syllable = syl
+		end
+		return (Array.new) << nil
 	end
 
 	def prep_phrase
-		phrase = Array.new
+		syl = @curr_syllable
+		line = @curr_line
+		for i in 0..5
+			phrase = Array.new
 
-		phrase.concat(choose(@prepositions))
-		phrase.concat(subject)
+			phrase.concat(choose(@prepositions))
+			phrase.concat(subject)
 
-		return phrase
+			if !phrase.include?(nil)
+				return phrase
+			end
+			@curr_line = line
+			@curr_syllable = syl
+		end
+		return (Array.new) << nil
 	end
 
 	def make_present_tense(array)
