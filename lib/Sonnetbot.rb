@@ -127,16 +127,20 @@ class Sonnetbot
 	end
 
 	def update_rhymes(word)
-		# puts_all_state(word.spelling)
+		puts_all_state(word.spelling)
 		letter = @rhyme_scheme[@curr_line]
+		puts letter
+		puts @rhyme_scheme
 
-		if @rhyme_dict.include?(letter)
-			@rhyming_with = @rhyme_dict[letter]
-		else
-			@rhyme_dict[letter] = word
-			@rhyming_with = nil
+		if letter != nil
+			if @rhyme_dict.include?(letter)
+				@rhyming_with = @rhyme_dict[letter]
+			else
+				@rhyme_dict[letter] = word
+				@rhyming_with = nil
+			end
 		end
-		# puts_all_state
+		puts_all_state(word.spelling)
 	end
 
 	########## grammatical methods: for putting sentences together ##########
@@ -347,7 +351,9 @@ class Sonnetbot
 	def last_syls(word)
 		# puts_all_state(word.spelling)
 		last_syls = Array.new
+		ind = 0
 		for pronunciation in word.pronunciations
+			ind += 1
 			begin
 				pron_length = word.stress_patterns[word.pronunciations.index(pronunciation)].length
 				# if @curr_syllable + pron_length <= @meter.length - 1
@@ -360,8 +366,9 @@ class Sonnetbot
 				last_syl = last_syl.tr('012', '')  # removes stress information; this should be accounted for by the scansion
 				last_syls << last_syl
 			rescue
-				puts "COULD NOT PROCESS THE FOLLOWING WORD:"
-				puts word.all_info
+				# usually an error will be thrown if the pronunciations list is too long for
+				# some reason. In this case, the pronunciations list should be shortened.
+				word.shorten_prons(ind)
 			end
 		end
 		return last_syls

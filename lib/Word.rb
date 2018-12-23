@@ -51,6 +51,10 @@ class Word
 		return @pronunciations
 	end
 
+	def shorten_prons(n)
+		@pronunciations = @pronunciations.first(n)
+	end
+
 	def stress_patterns
 		return @stress_patterns
 	end
