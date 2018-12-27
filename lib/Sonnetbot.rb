@@ -131,12 +131,8 @@ class Sonnetbot
 	def update_rhymes(word)
 		# assign this word to be the rhyme for this letter
 		letter = @rhyme_scheme[@curr_line]
-		if letter != nil
-			if @rhyme_dict.include?(letter)
-				@rhyming_with = @rhyme_dict[letter]
-			else
-				@rhyme_dict[letter] = word
-			end
+		if letter != nil and !@rhyme_dict.include?(letter)
+			@rhyme_dict[letter] = word
 		end
 
 		# assign @rhyming_with according to the next line in the rhyme scheme
