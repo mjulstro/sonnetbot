@@ -136,16 +136,16 @@ class Sonnetbot
 		end
 
 		# assign @rhyming_with according to the next line in the rhyme scheme
-		letter = @rhyme_scheme[@curr_line + 1]
-		if letter != nil and @rhyme_dict.include?(letter)
-			@rhyming_with = @rhyme_dict[letter]
+		letter2 = @rhyme_scheme[@curr_line + 1]
+		if letter2 != nil and @rhyme_dict.include?(letter2)
+			@rhyming_with = @rhyme_dict[letter2]
 		end
 
 		begin
-			puts "*******************#{@curr_line}, #{letter}, #{@rhyming_with.spelling}, #{@rhyme_dict[letter].spelling}"
+			puts "*******************#{@curr_line + 1}, #{letter2}, #{@rhyming_with.spelling}, #{@rhyme_dict[letter2].spelling}"
 		rescue
 			# if @rhyming_with or @rhyme_dict[letter] is nil
-			puts "*******************#{@curr_line}, #{letter}"
+			puts "*******************#{@curr_line + 1}, #{letter2}"
 		end
 	end
 
