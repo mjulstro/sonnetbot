@@ -71,7 +71,7 @@ class Sonnetbot
 				end
 				skip_next = false
 				capital = false
-			elsif word == "NEWLINE"
+			elsif word == "NEWLINE" or word == "\n"
 				if ["?", "!", ".", ","].include?(array[ind + 1])
 					text << array[ind + 1]
 					skip_next = true
@@ -111,7 +111,7 @@ class Sonnetbot
 		if @curr_syllable >= @meter.length
 			@curr_syllable = 0
 			@curr_line += 1
-			# array << update_rhymes(word)
+			update_rhymes(word)
 			array << "NEWLINE"
 			# puts array
 
@@ -130,6 +130,7 @@ class Sonnetbot
 
 	def update_rhymes(word)
 		letter = @rhyme_scheme[@curr_line - 1]
+		puts letter
 
 		if letter != nil
 			if @rhyme_dict.include?(letter)
@@ -139,7 +140,6 @@ class Sonnetbot
 				@rhyming_with = nil
 			end
 		end
-		return letter
 	end
 
 	########## grammatical methods: for putting sentences together ##########
