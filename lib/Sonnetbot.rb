@@ -36,12 +36,13 @@ class Sonnetbot
 		@meter = meter
 		@rhyme_scheme = rhyme_scheme
 		@rhyme_dict = Hash.new
+		@num_lines = num_lines
 
 		@sonnet = Array.new
 
 		# keep adding sentences to the sonnet
 		# until we reach the last syllable of the last line
-		while @curr_line <= num_lines and @curr_syllable <= meter.length
+		while @curr_line <= @num_lines and @curr_syllable <= meter.length
 			@sonnet.concat(sentence)
 		end
 
@@ -106,10 +107,11 @@ class Sonnetbot
 		@curr_syllable += @curr_add  # the length of the pronunciation that scanned for the last word
 		array << word
 
+		puts "#{@curr_line}:#{@curr_syllable} #{word.spelling}"
 		if @curr_syllable >= @meter.length
-			update_rhymes(word)
 			@curr_syllable = 0
 			@curr_line += 1
+			# array << update_rhymes(word)
 			array << "NEWLINE"
 			# puts array
 
@@ -127,10 +129,7 @@ class Sonnetbot
 	end
 
 	def update_rhymes(word)
-		puts_all_state(word.spelling)
-		letter = @rhyme_scheme[@curr_line]
-		puts letter
-		puts @rhyme_scheme
+		letter = @rhyme_scheme[@curr_line - 1]
 
 		if letter != nil
 			if @rhyme_dict.include?(letter)
@@ -140,7 +139,7 @@ class Sonnetbot
 				@rhyming_with = nil
 			end
 		end
-		puts_all_state(word.spelling)
+		return letter
 	end
 
 	########## grammatical methods: for putting sentences together ##########
@@ -157,7 +156,7 @@ class Sonnetbot
 			# puts "Starting a sentence!"
 
 			sentence = clause
-			while rand(4) == 0
+			while rand(4) == 0 and @curr_line < @num_lines
 				(sentence << ",").concat(choose(@conjunctions)).concat(clause)
 			end
 
@@ -178,12 +177,12 @@ class Sonnetbot
 			plural = false
 			clause = Array.new
 
-			while rand(4) == 0
+			while rand(4) == 0 and @curr_line < @num_lines
 				clause.concat(prep_phrase)
 			end
 
 			clause.concat(subject)
-			while rand(4) == 0
+			while rand(4) == 0 and @curr_line < @num_lines
 				clause << " and"
 				@curr_syllable += 1
 				clause.concat(subject)
@@ -191,7 +190,7 @@ class Sonnetbot
 			end
 
 			clause.concat(predicate(plural))
-			while rand(4) == 0
+			while rand(4) == 0 and @curr_line < @num_lines
 				clause << " and"
 				@curr_syllable += 1
 				clause.concat(predicate(plural))
@@ -229,7 +228,7 @@ class Sonnetbot
 			subj.concat(choose(@nouns))
 
 			# "My hungry, sweet dog with a green tail"
-			while rand(4) == 0
+			while rand(4) == 0 and @curr_line < @num_lines
 				subj.concat(prep_phrase)
 			end
 
@@ -268,7 +267,7 @@ class Sonnetbot
 			end
 
 			# "snorts widely, sleepily, joyfully in a park"
-			while rand(4) == 0
+			while rand(4) == 0 and @curr_line < @num_lines
 				pred.concat(prep_phrase)
 			end
 
