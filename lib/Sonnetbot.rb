@@ -109,9 +109,9 @@ class Sonnetbot
 
 		puts "#{@curr_line}:#{@curr_syllable} #{word.spelling}"
 		if @curr_syllable >= @meter.length
+			update_rhymes(word)
 			@curr_syllable = 0
 			@curr_line += 1
-			update_rhymes(word)
 			array << "NEWLINE"
 			# puts array
 
@@ -129,16 +129,27 @@ class Sonnetbot
 	end
 
 	def update_rhymes(word)
-		letter = @rhyme_scheme[@curr_line - 1]
-		puts letter
-
+		# assign this word to be the rhyme for this letter
+		letter = @rhyme_scheme[@curr_line]
 		if letter != nil
 			if @rhyme_dict.include?(letter)
 				@rhyming_with = @rhyme_dict[letter]
 			else
 				@rhyme_dict[letter] = word
-				@rhyming_with = nil
 			end
+		end
+
+		# assign @rhyming_with according to the next line in the rhyme scheme
+		letter = @rhyme_scheme[@curr_line + 1]
+		if letter != nil and @rhyme_dict.include?(letter)
+			@rhyming_with = @rhyme_dict[letter]
+		end
+
+		begin
+			puts "*******************#{@curr_line}, #{letter}, #{@rhyming_with.spelling}, #{@rhyme_dict[letter].spelling}"
+		rescue
+			# if @rhyming_with or @rhyme_dict[letter] is nil
+			puts "*******************#{@curr_line}, #{letter}"
 		end
 	end
 
@@ -254,6 +265,18 @@ class Sonnetbot
 			if plural
 				pred.concat(choose(@verbs))
 			else
+				# TODO: The commented-out part below is not
+				# adapted to the fact that "choose" returns
+				# an Array. Deal with this... someday
+
+				# # this section is to protect against choosing a verb for its
+				# # non-conjugated form, and then conjugating it and having it
+				# # not scan or rhyme anymore
+				# chosen = make_present_tense(choose(@verbs))
+				# while !scans?(chosen) or !rhymes?(chosen)
+				# 	chosen = make_present_tense(choose(@verbs))
+				# end
+				# pred.concat(chosen)
 				pred.concat(make_present_tense(choose(@verbs)))
 			end
 
