@@ -319,13 +319,15 @@ class Sonnetbot
 
 	def make_present_tense(array)
 		verb = array[0]
-		if verb.spelling.end_with?("s") or verb.spelling.end_with?("h")
-			new_verb = @dict_reader.single_word(verb.spelling + "es")
-		else
-			new_verb = @dict_reader.single_word(verb.spelling + "s")
-		end
+		if verb != nil
+			if verb.spelling.end_with?("s") or verb.spelling.end_with?("h")
+				new_verb = @dict_reader.single_word(verb.spelling + "es")
+			else
+				new_verb = @dict_reader.single_word(verb.spelling + "s")
+			end
 
-		array[0] = new_verb
+			array[0] = new_verb
+		end
 		return array
 	end
 
