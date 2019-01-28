@@ -1,4 +1,4 @@
-require_relative 'DictReader.rb'
+require_relative 'dict_reader.rb'
 
 class Word
 
