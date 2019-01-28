@@ -876,7 +876,6 @@ def fill_nouns
 		"pleasure",
 		"score",
 		"screw",
-		"sex",
 		"shop",
 		"shower",
 		"suit",

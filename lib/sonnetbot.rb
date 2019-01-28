@@ -99,13 +99,13 @@ class Sonnetbot
       # we went through the entire part-of-speech list without finding
       # a word that both scans and rhymes
       array << nil
-      return array # returning here should prevent the function from adding to curr_syllable when no suitable word is found
+      break
     end
 
     @curr_syllable += @curr_add # the length of the pronunciation that scanned for the last word
     array << word
 
-    # puts "#{@curr_line}:#{@curr_syllable} #{word.spelling}
+    puts "#{@curr_line}:#{@curr_syllable} #{word.spelling}"
     if @curr_syllable >= @meter.length
       update_rhymes word
       @curr_syllable = 0
@@ -135,12 +135,12 @@ class Sonnetbot
     letter2 = @rhyme_scheme[@curr_line + 1]
     @rhyming_with = @rhyme_dict[letter2] if !letter2.nil? && @rhyme_dict.include?(letter2)
 
-    # begin
-    #   # puts "*******************#{@curr_line + 1}, #{letter2}, #{@rhyming_with.spelling}, #{@rhyme_dict[letter2].spelling}"
-    # rescue
-    #   # if @rhyming_with or @rhyme_dict[letter] is nil
-    #   # puts "*******************#{@curr_line + 1}, #{letter2}"
-    # end
+    begin
+      puts "*******************#{@curr_line + 1}, #{letter2}, #{@rhyming_with.spelling}, #{@rhyme_dict[letter2].spelling}"
+    rescue
+      # if @rhyming_with or @rhyme_dict[letter] is nil
+      puts "*******************#{@curr_line + 1}, #{letter2}"
+    end
   end
 
   ########## grammatical methods: for putting sentences together ##########
