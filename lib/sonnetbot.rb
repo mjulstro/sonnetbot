@@ -99,7 +99,7 @@ class Sonnetbot
       # we went through the entire part-of-speech list without finding
       # a word that both scans and rhymes
       array << nil
-      break
+      return array # returning here should prevent the function from adding to curr_syllable when no suitable word is found
     end
 
     @curr_syllable += @curr_add # the length of the pronunciation that scanned for the last word
