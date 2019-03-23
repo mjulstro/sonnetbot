@@ -57,7 +57,7 @@ class DictReader
       end
     end
 
-    puts 'Done initializing the lists!'
+    # puts 'Done initializing the lists!'
     # useless_variable = gets
     @parts_of_speech
   end

@@ -641,7 +641,6 @@ def fill_adverbs
 		"well",
 		"wetly",
 		"when",
-		"where",
 		"while",
 		"whole-heartedly",
 		"wholly",
