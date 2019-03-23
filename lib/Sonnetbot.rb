@@ -159,6 +159,7 @@ class Sonnetbot
     syl = @curr_syllable
     line = @curr_line
     6.times do
+      check_rhymes
       @pos_hash.values.each do |pos|
         pos.shuffle
         pos.reset # so we don't get the same words being chosen every time
@@ -183,6 +184,7 @@ class Sonnetbot
     line = @curr_line
     syl = @curr_syllable
     6.times do
+      check_rhymes
       plural = false
       clause = []
 
@@ -215,10 +217,13 @@ class Sonnetbot
     line = @curr_line
     syl = @curr_syllable
     6.times do
+      check_rhymes
       subj = []
 
       # "My"
-      subj.concat(choose @prefixes) if rand(6) < 5
+      if can_rhyme?(@prefixes)
+        subj.concat(choose @prefixes) if rand(6) < 5
+      end
 
       # "My hungry, sweet"
       if rand(2).zero?
@@ -254,6 +259,7 @@ class Sonnetbot
     # end
 
     6.times do
+      check_rhymes
       pred = []
 
       # "snorts"
@@ -297,6 +303,7 @@ class Sonnetbot
     syl = @curr_syllable
     line = @curr_line
     6.times do
+      check_rhymes
       phrase = []
 
       phrase.concat(choose @prepositions)
@@ -389,6 +396,26 @@ class Sonnetbot
       end
     end
     last_syls
+  end
+
+  def can_rhyme?(pos)
+    line = @curr_line
+    syl = @curr_syllable
+
+    for word in pos.final
+      return true if scans?(word) && rhymes?(word)
+    end
+    return false
+  end
+
+  def check_rhymes
+    # assign @rhyming_with according to the current line in the rhyme scheme
+    letter = @rhyme_scheme[@curr_line]
+    if !letter.nil? && @rhyme_dict.include?(letter)
+        @rhyming_with = @rhyme_dict[letter]
+    else
+      @rhyming_with = nil
+    end
   end
 
   # for debugging
