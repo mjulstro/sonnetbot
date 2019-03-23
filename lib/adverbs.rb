@@ -640,8 +640,6 @@ def fill_adverbs
 		"weekly",
 		"well",
 		"wetly",
-		"when",
-		"while",
 		"whole-heartedly",
 		"wholly",
 		"why",
