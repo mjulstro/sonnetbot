@@ -1,5 +1,5 @@
-require_relative '../lib/Sonnetbot.rb'
-require_relative '../lib/DictReader.rb'
+require_relative '../lib/sonnetbot.rb'
+require_relative '../lib/dict_reader.rb'
 
 # sonnetbot = Sonnetbot.new
 
