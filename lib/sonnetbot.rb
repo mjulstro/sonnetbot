@@ -98,7 +98,7 @@ class Sonnetbot
 
       # we went through the entire part-of-speech list without finding
       # a word that both scans and rhymes
-      array << nil
+      array << nil  # TODO: why do I do this
       break
     end
 
@@ -106,6 +106,10 @@ class Sonnetbot
     array << word
 
     puts "#{@curr_line}:#{@curr_syllable} #{word.spelling}"
+    if word.spelling == "swing"
+      puts "ahoy matey"
+    end
+
     if @curr_syllable >= @meter.length
       update_rhymes word
       @curr_syllable = 0
@@ -127,13 +131,22 @@ class Sonnetbot
   end
 
   def update_rhymes(word)
+  	# rhyme scheme: "ABAB CDCD EFEF GG" without the spaces
+  	# say curr_line = 3
+  	# letter = B, should not assign rhyme_dict[B] bc it should already be assigned,
+  	# letter2 = C, @rhyming_with becomes nil
+
     # assign this word to be the rhyme for this letter
     letter = @rhyme_scheme[@curr_line]
     @rhyme_dict[letter] = word if !letter.nil? && !@rhyme_dict.include?(letter)
 
     # assign @rhyming_with according to the next line in the rhyme scheme
     letter2 = @rhyme_scheme[@curr_line + 1]
-    @rhyming_with = @rhyme_dict[letter2] if !letter2.nil? && @rhyme_dict.include?(letter2)
+    if !letter2.nil? && @rhyme_dict.include?(letter2)
+        @rhyming_with = @rhyme_dict[letter2]
+    else
+    	@rhyming_with = nil
+    end
 
     begin
       puts "*******************#{@curr_line + 1}, #{letter2}, #{@rhyming_with.spelling}, #{@rhyme_dict[letter2].spelling}"
@@ -158,7 +171,7 @@ class Sonnetbot
 
       sentence = clause
       while rand(4).zero? && (@curr_line < @num_lines)
-        (sentence << ',').concat(choose(@conjunctions)).concat(clause)
+        (sentence << ',').concat(choose @conjunctions).concat(clause)
       end
 
       sentence << %w[? ! .].sample
@@ -190,7 +203,7 @@ class Sonnetbot
       while rand(4).zero? && (@curr_line < @num_lines)
         clause << ' and'
         @curr_syllable += 1
-        clause.concat predicate plural
+        clause.concat(predicate plural)
       end
 
       return clause unless clause.include? nil
@@ -208,16 +221,16 @@ class Sonnetbot
       subj = []
 
       # "My"
-      subj.concat choose @prefixes if rand(6) < 5
+      subj.concat(choose @prefixes) if rand(6) < 5
 
       # "My hungry, sweet"
       if rand(2).zero?
-        subj.concat choose @adjectives
+        subj.concat(choose @adjectives)
         (subj << ',').concat choose @adjectives while rand(2).zero?
       end
 
       # "My hungry, sweet dog"
-      subj.concat choose @nouns
+      subj.concat(choose @nouns)
 
       # "My hungry, sweet dog with a green tail"
       subj.concat prep_phrase while rand(4).zero? && (@curr_line < @num_lines)
@@ -235,7 +248,13 @@ class Sonnetbot
   def predicate(plural)
     line = @curr_line
     syl = @curr_syllable
-    return [] << nil if choose(@verbs).include? nil
+    # begin
+    # 	print("test only:")
+    # 	return [] << nil if choose(@verbs).include? nil  #
+    # ensure
+    #   @curr_line = line
+    #   @curr_syllable = syl
+    # end
 
     6.times do
       pred = []
@@ -256,13 +275,13 @@ class Sonnetbot
         #   chosen = make_present_tense(choose(@verbs))
         # end
         # pred.concat(chosen)
-        pred.concat make_present_tense choose @verbs
+        pred.concat(make_present_tense(choose @verbs))
       end
 
       # "snorts widely, sleepily, joyfully"
       if rand(4).zero?
-        pred.concat choose @adverbs
-        (pred << ',').concat choose @adverbs while rand(4).zero?
+        pred.concat(choose @adverbs)
+        (pred << ',').concat(choose @adverbs) while rand(4).zero?
 
       end
 
@@ -283,7 +302,7 @@ class Sonnetbot
     6.times do
       phrase = []
 
-      phrase.concat choose @prepositions
+      phrase.concat(choose @prepositions)
       phrase.concat subject
 
       return phrase unless phrase.include? nil
@@ -359,7 +378,7 @@ class Sonnetbot
         # pron_length = word.stress_patterns[word.pronunciations.index pronunciation].length
         # if @curr_syllable + pron_length <= @meter.length - 1
         #   return true
-        #   # return true if this word doesn't put us at the end of the line
+        #   # return true if this word doesn't put Fus at the end of the line
         # end
 
         last_syl_start = pronunciation.rindex(/\d/) - 2

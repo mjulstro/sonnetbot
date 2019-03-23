@@ -8,13 +8,13 @@ class DictReader
                        conjunctions, prepositions)
     @parts_of_speech = {}
 
-    @parts_of_speech['prefixes']     = Part_of_Speech.new(prefixes,     'prefixes')
-    @parts_of_speech['adjectives']   = Part_of_Speech.new(adjectives,   'adjectives')
-    @parts_of_speech['nouns']        = Part_of_Speech.new(nouns,        'nouns')
-    @parts_of_speech['verbs']        = Part_of_Speech.new(verbs,        'verbs')
-    @parts_of_speech['adverbs']      = Part_of_Speech.new(adverbs,      'adverbs')
-    @parts_of_speech['conjunctions'] = Part_of_Speech.new(conjunctions, 'conjunctions')
-    @parts_of_speech['prepositions'] = Part_of_Speech.new(prepositions, 'prepositions')
+    @parts_of_speech['prefixes']     = PartOfSpeech.new(prefixes,     'prefixes')
+    @parts_of_speech['adjectives']   = PartOfSpeech.new(adjectives,   'adjectives')
+    @parts_of_speech['nouns']        = PartOfSpeech.new(nouns,        'nouns')
+    @parts_of_speech['verbs']        = PartOfSpeech.new(verbs,        'verbs')
+    @parts_of_speech['adverbs']      = PartOfSpeech.new(adverbs,      'adverbs')
+    @parts_of_speech['conjunctions'] = PartOfSpeech.new(conjunctions, 'conjunctions')
+    @parts_of_speech['prepositions'] = PartOfSpeech.new(prepositions, 'prepositions')
 
     initialize_current_word_array # first time: @next_word = a
     curr_word = @next_word # curr_word = a

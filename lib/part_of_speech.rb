@@ -1,4 +1,4 @@
-class Part_of_Speech
+class PartOfSpeech
 
 	def initialize(old_list, key)
 		@key = key
