@@ -73,9 +73,9 @@ class DictReader
         pronunciation_array << pronunciation
       end
     end
-    if pronunciation_array.empty?
-      puts "#{word} could not be found in the CMUDict!"
-    end
+    # if pronunciation_array.empty?
+    #   puts "#{word} could not be found in the CMUDict!"
+    # end
     Word.new(word, pronunciation_array)
   end
 
