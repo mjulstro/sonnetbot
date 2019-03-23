@@ -1,6 +1,8 @@
 require_relative '../lib/sonnetbot.rb'
 require_relative '../lib/dict_reader.rb'
 
+srand(1)
+
 # sonnetbot = Sonnetbot.new
 
 def test_rhymes

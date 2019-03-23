@@ -105,7 +105,7 @@ class Sonnetbot
     @curr_syllable += @curr_add # the length of the pronunciation that scanned for the last word
     array << word
 
-    # puts "#{@curr_line}:#{@curr_syllable} #{word.spelling}"
+    puts "#{@curr_line}:#{@curr_syllable} #{word.spelling}"
 
     if @curr_syllable >= @meter.length
       update_rhymes word
@@ -145,12 +145,12 @@ class Sonnetbot
       @rhyming_with = nil
     end
 
-    # begin
-    #   puts "*******************#{@curr_line + 1}, #{letter2}, #{@rhyming_with.spelling}, #{@rhyme_dict[letter2].spelling}"
-    # rescue
-    #   # if @rhyming_with or @rhyme_dict[letter] is nil
-    #   puts "*******************#{@curr_line + 1}, #{letter2}"
-    # end
+    begin
+      puts "*******************#{@curr_line + 1}, #{letter2}, #{@rhyming_with.spelling}, #{@rhyme_dict[letter2].spelling}"
+    rescue
+      # if @rhyming_with or @rhyme_dict[letter] is nil
+      puts "*******************#{@curr_line + 1}, #{letter2}"
+    end
   end
 
   ########## grammatical methods: for putting sentences together ##########
