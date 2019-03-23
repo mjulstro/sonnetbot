@@ -98,7 +98,7 @@ class Sonnetbot
 
       # we went through the entire part-of-speech list without finding
       # a word that both scans and rhymes
-      array << nil
+      array << nil  # TODO: why do I do this
       break
     end
 
@@ -106,6 +106,10 @@ class Sonnetbot
     array << word
 
     puts "#{@curr_line}:#{@curr_syllable} #{word.spelling}"
+    if word.spelling == "swing"
+      puts "ahoy matey"
+    end
+
     if @curr_syllable >= @meter.length
       update_rhymes word
       @curr_syllable = 0
@@ -190,7 +194,7 @@ class Sonnetbot
       while rand(4).zero? && (@curr_line < @num_lines)
         clause << ' and'
         @curr_syllable += 1
-        clause.concat predicate plural
+        clause.concat(predicate plural)
       end
 
       return clause unless clause.include? nil
@@ -235,7 +239,12 @@ class Sonnetbot
   def predicate(plural)
     line = @curr_line
     syl = @curr_syllable
-    return [] << nil if choose(@verbs).include? nil
+    begin
+      return [] << nil if choose(@verbs).include? nil  #
+    ensure
+      @curr_line = line
+      @curr_syllable = syl
+    end
 
     6.times do
       pred = []
@@ -359,7 +368,7 @@ class Sonnetbot
         # pron_length = word.stress_patterns[word.pronunciations.index pronunciation].length
         # if @curr_syllable + pron_length <= @meter.length - 1
         #   return true
-        #   # return true if this word doesn't put us at the end of the line
+        #   # return true if this word doesn't put Fus at the end of the line
         # end
 
         last_syl_start = pronunciation.rindex(/\d/) - 2
