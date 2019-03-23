@@ -4,389 +4,405 @@ require_relative 'adverbs.rb'
 require_relative 'nouns.rb'
 require_relative 'conjunctions.rb'
 require_relative 'prepositions.rb'
-require_relative 'Word.rb'
-require_relative 'Part_of_Speech.rb'
-require_relative 'DictReader.rb'
-require_relative 'Marker.rb'
+require_relative 'word.rb'
+require_relative 'part_of_speech.rb'
+require_relative 'dict_reader.rb'
 
 class Sonnetbot
+  def initialize
+    @dict_reader = DictReader.new
+    # vocabulary
+    prefixes = %w[a the my your his her their our]
+    @pos_hash = @dict_reader.initialize_lists(prefixes,
+                                              fill_adjectives, fill_nouns,
+                                              fill_verbs, fill_adverbs,
+                                              fill_conjunctions,
+                                              fill_prepositions)
+    @prefixes     = @pos_hash['prefixes']
+    @adjectives   = @pos_hash['adjectives']
+    @nouns        = @pos_hash['nouns']
+    @verbs        = @pos_hash['verbs']
+    @adverbs      = @pos_hash['adverbs']
+    @conjunctions = @pos_hash['conjunctions']
+    @prepositions = @pos_hash['prepositions']
+  end
 
-	def initialize
-		@dict_reader = DictReader.new
-		# vocabulary
-		prefixes = ["a", "the", "my", "your", "his", "her", "their", "our"]
-		@pos_hash = @dict_reader.initialize_lists(prefixes,
-			fill_adjectives, fill_nouns, fill_verbs, fill_adverbs,
-			fill_conjunctions, fill_prepositions)
-		@prefixes     = @pos_hash["prefixes"]
-		@adjectives   = @pos_hash["adjectives"]
-		@nouns        = @pos_hash["nouns"]
-		@verbs        = @pos_hash["verbs"]
-		@adverbs      = @pos_hash["adverbs"]
-		@conjunctions = @pos_hash["conjunctions"]
-		@prepositions = @pos_hash["prepositions"]
-	end
+  ########## primary methods: the meat and bones ##########
 
+  def make_sonnet(num_lines = 14, meter = 'x/x/x/x/x/', rhyme_scheme = 'ABABCDCDEFEFGG')
+    @curr_line = 0
+    @curr_syllable = 0
+    @rhyming_with = nil
+    @meter = meter
+    @rhyme_scheme = rhyme_scheme
+    @rhyme_dict = {}
+    @num_lines = num_lines
 
-	########## primary methods: the meat and bones ##########
+    @sonnet = []
 
-	def make_sonnet(num_lines = 14, meter = "x/x/x/x/x/", rhyme_scheme = "ABABCDCDEFEFGG")
-		# poetic state variables
-		@sonnet = Array.new
-		@curr_line = 0
-		@curr_syllable = 0
-		@rhyming_with = nil
-		@meter = "x/x/x/x/x/"
-		@rhyme_scheme = "ABABCDCDEFEFGG"
-		@rhyme_dict = Hash.new
+    # keep adding sentences to the sonnet
+    # until we reach the last syllable of the last line
+    while (@curr_line <= @num_lines) && (@curr_syllable <= meter.length)
+      @sonnet.concat sentence
+    end
 
-		# keep adding sentences to the sonnet
-		# until we reach the last syllable of the last line
-		while @curr_line <= num_lines and @curr_syllable < meter.length
-			@sonnet.concat(make(method(:sentence)))
-		end
+    to_text @sonnet
+  end
 
-		return to_text(@sonnet)
-	end
+  # def make_sentence
+  #   return sentence_to_text(sentence)
+  # end
 
-	# def make_sentence
-	# 	return sentence_to_text(sentence)
-	# end
+  def to_text(array)
+    text = ''
+    capital = true
+    ind = 0
+    skip_next = false
+    array.each do |word|
+      if %w[? ! .].include? word
+        text << word unless skip_next
+        skip_next = false
+        capital = true
+      elsif [',', ' and'].include? word
+        text << word unless skip_next
+        skip_next = false
+        capital = false
+      elsif (word == 'NEWLINE') || (word == "\n")
+        if %w[? ! . ,].include?(array[ind + 1])
+          text << array[ind + 1]
+          skip_next = true
+        end
+        text << "\n"
+      else
+        text << ' ' << if capital
+                         word.spelling.capitalize
+                       else
+                         word.spelling
+                       end
+        capital = false
+      end
+      ind += 1
+    end
 
-	def to_text(array)
-		text = ""
-		capital = true
-		ind = 0
-		skip_next = false
-		for word in array
-			if ["?", "!", "."].include?(word)
-				if !skip_next
-					text << word
-				end
-				skip_next = false
-				capital = true
-			elsif [",", " and"].include?(word)
-				if !skip_next
-					text << word
-				end
-				skip_next = false
-				capital = false
-			elsif word == "\n"
-				if ["?", "!", ".", ","].include?(array[ind + 1])
-					text << array[ind + 1]
-					skip_next = true
-				end
-				text << "\n"
-			elsif word.is_a?(Marker)
-				next
-			else
-				if capital
-					text << " " << word.spelling.capitalize
-				else
-					text << " " << word.spelling
-				end
-				capital = false
-			end
-			ind += 1
-		end
+    text
+  end
 
-		return text
-	end
+  def choose(pos)
+    array = []
 
-	def choose(pos)
-		array = Array.new
+    word = pos.next
+    orig = word
+    while !scans?(word) || !rhymes?(word)
+      word = pos.next
+      next unless word == orig
 
-		word = pos.next
-		orig_word = word
-		while !scans?(word) or !rhymes?(word)
-			word = pos.next
-			if word == orig_word
-				array << nil
-				break
-			end
-		end
+      # we went through the entire part-of-speech list without finding
+      # a word that both scans and rhymes
+      array << nil  # TODO: why do I do this
+      break
+    end
 
-		@curr_syllable += @curr_add  # the length of the pronunciation that scanned for the last word
-		array << word
+    @curr_syllable += @curr_add # the length of the pronunciation that scanned for the last word
+    array << word
 
-		if @curr_syllable >= @meter.length
-			@curr_syllable = 0
-			@curr_line += 1
-			array << "\n"
-			# update_rhymes(word)
+    # puts "#{@curr_line}:#{@curr_syllable} #{word.spelling}"
 
-			while !scans?(word) or !rhymes?(word)
-				word = pos.next
-				if word == orig_word
-					array << nil
-					break
-				end
-			end
-		end
+    if @curr_syllable >= @meter.length
+      update_rhymes word
+      @curr_syllable = 0
+      @curr_line += 1
+      array << 'NEWLINE'
+      # puts array
 
-		return array
-	end
+      orig = word
+      while !scans?(word) || !rhymes?(word)
+        word = pos.next
+        if word == orig
+          array << nil
+          break
+        end
+      end
+    end
 
-	def update_rhymes(word)
-		letter = @rhyme_scheme[@curr_line]
+    array
+  end
 
-		if @rhyme_dict.include?(letter)
-			@rhyming_with = @rhyme_dict[letter]
-		else
-			@rhyme_dict[letter] = word
-			@rhyming_with = nil
-		end
-	end
+  def update_rhymes(word)
+    # rhyme scheme: "ABAB CDCD EFEF GG" without the spaces
+    # say curr_line = 3
+    # letter = B, should not assign rhyme_dict[B] bc it should already be assigned,
+    # letter2 = C, @rhyming_with becomes nil
 
-	########## grammatical methods: for putting sentences together ##########
+    # assign this word to be the rhyme for this letter
+    letter = @rhyme_scheme[@curr_line]
+    @rhyme_dict[letter] = word if !letter.nil? && !@rhyme_dict.include?(letter)
 
-	def make(func, param = nil)
-		for i in 0..5
-			puts_all_state(func.name)
-			if param == nil
-				item = func.call
-			else
-				item = func.call(param)
-			end
+    # assign @rhyming_with according to the next line in the rhyme scheme
+    letter2 = @rhyme_scheme[@curr_line + 1]
+    if !letter2.nil? && @rhyme_dict.include?(letter2)
+        @rhyming_with = @rhyme_dict[letter2]
+    else
+      @rhyming_with = nil
+    end
 
-			if !item.include?(nil)
-				if @curr_syllable >= @meter.length
-					@curr_syllable = @curr_syllable - @meter.length
-					@curr_line += 1
-				end
+    # begin
+    #   puts "*******************#{@curr_line + 1}, #{letter2}, #{@rhyming_with.spelling}, #{@rhyme_dict[letter2].spelling}"
+    # rescue
+    #   # if @rhyming_with or @rhyme_dict[letter] is nil
+    #   puts "*******************#{@curr_line + 1}, #{letter2}"
+    # end
+  end
 
-				marker = Marker.new("#{func.name}", @curr_syllable, @curr_line)
-				puts marker
-				@sonnet << marker
-				# sonnet.concat(item)
-				return item
-			else
-				puts "THIS ARRAY HAD NIL IN IT:"
-				puts item
-				puts
-				# THIS IS WHERE THE BACKTRACKING HAPPENS!
-				# DELETE EVERYTHING AFTER THE LAST MARKER WITH GRAM_UNIT = FUNC.NAME
-				del_point = @sonnet.rindex { |item| item.is_a?(Marker) and item.gram_unit == func.name}
-				@sonnet.slice!(del_point + 1, -1)
-				# RESET CURR_SYLLABLE AND CURR_LINE TO WHAT THEY WERE AT THAT LAST MARKER
-				marker = @sonnet[del_point]
-				@curr_syllable = marker.syl
-				@curr_line = marker.line
-				# DELETE THAT MARKER TOO
-				@sonnet.pop
-			end
-		end
-		return (Array.new) << nil
-	end
+  ########## grammatical methods: for putting sentences together ##########
 
-	def sentence
-		@sonnet << Marker.new("sentence", @curr_syllable, @curr_line)
-		for pos in @pos_hash.values
-			pos.shuffle
-			pos.reset  # so we don't get the same words being chosen every time
-		end
+  def sentence
+    syl = @curr_syllable
+    line = @curr_line
+    6.times do
+      @pos_hash.values.each do |pos|
+        pos.shuffle
+        pos.reset # so we don't get the same words being chosen every time
+      end
 
-		# puts "Starting a sentence!"
+      # puts "Starting a sentence!"
 
-		sentence = make(method(:clause))
-		while rand(4) == 0
-			in_progress = Array.new
-			in_progress << ","
-			in_progress.concat(choose(@conjunctions)).concat(make(method(:clause)))
-			sentence.concat(in_progress)
-			@sonnet.concat(in_progress)
-		end
+      sentence = clause
+      while rand(4).zero? && (@curr_line < @num_lines)
+        (sentence << ',').concat(choose @conjunctions).concat(clause)
+      end
 
-		punctuation = ["?", "!", "."].sample
-		sentence << punctuation
-		@sonnet << punctuation
+      sentence << %w[? ! .].sample
+      return sentence unless sentence.include? nil
 
-		return sentence
-	end
+      @curr_syllable = syl
+      @curr_line = line
+    end
+  end
 
-	def clause
-		plural = false
+  def clause
+    line = @curr_line
+    syl = @curr_syllable
+    6.times do
+      plural = false
+      clause = []
 
-		cls = Array.new
-		while rand(6) == 0
-			cls.concat(make(method(:prep_phrase)))
-		end
+      clause.concat prep_phrase while rand(4).zero? && (@curr_line < @num_lines)
 
-		cls.concat(make(method(:subject)))
-		while rand(4) == 0
-			cls << " and"
-			@curr_syllable += 1
-			cls.concat(make(method(:subject)))
-			plural = true
-		end
+      clause.concat subject
+      while rand(4).zero? && (@curr_line < @num_lines)
+        clause << ' and'
+        @curr_syllable += 1
+        clause.concat subject
+        plural = true
+      end
 
-		cls.concat(make(method(:predicate), plural))
-		while rand(4) == 0
-			cls << " and"
-			@curr_syllable += 1
-			cls.concat(make(method(:predicate), plural))
-		end
+      clause.concat predicate plural
+      while rand(4).zero? && (@curr_line < @num_lines)
+        clause << ' and'
+        @curr_syllable += 1
+        clause.concat(predicate plural)
+      end
 
-		return cls
-	end
+      return clause unless clause.include? nil
 
-	def subject
-		subj = Array.new
+      @curr_line = line
+      @curr_syllable = syl
+    end
+    [] << nil
+  end
 
-		# "My"
-		if rand(6) < 5
-			pref = choose(@prefixes)
-			subj.concat(pref)
-			@sonnet.concat(pref)
-		end
+  def subject
+    line = @curr_line
+    syl = @curr_syllable
+    6.times do
+      subj = []
 
-		# "My hungry, sweet"
-		if rand(3) == 0
-			adj = choose(@adjectives)
-			subj.concat(adj)
-			@sonnet.concat(adj)
-			while rand(3) == 0
-				adj = choose(@adjectives)
-				(subj << ",").concat(adj)
-				(@sonnet << ",").concat(adj)
-			end
-		end
+      # "My"
+      subj.concat(choose @prefixes) if rand(6) < 5
 
-		# "My hungry, sweet dog"
-		noun = choose(@nouns)
-		subj.concat(noun)
-		@sonnet.concat(noun)
+      # "My hungry, sweet"
+      if rand(2).zero?
+        subj.concat(choose @adjectives)
+        (subj << ',').concat choose @adjectives while rand(2).zero?
+      end
 
-		# "My hungry, sweet dog with a green tail"
-		while rand(4) == 0
-			subj.concat(make(method(:prep_phrase)))
-		end
+      # "My hungry, sweet dog"
+      subj.concat(choose @nouns)
 
-		return subj
-	end
+      # "My hungry, sweet dog with a green tail"
+      subj.concat prep_phrase while rand(4).zero? && (@curr_line < @num_lines)
 
-	def predicate(plural)
-		pred = Array.new
+      return subj unless subj.include? nil
 
-		# "snorts"
-		verb = choose(@verbs)
-		if plural
-			pred.concat(verb)
-			@sonnet.concat(verb)
-		else
-			pred.concat(make_present_tense(verb))
-			@sonnet.concat(make_present_tense(verb))
-		end
+      @curr_line = line
+      @curr_syllable = syl
+    end
+    [] << nil
+  end
 
-		# "snorts widely, sleepily, joyfully"
-		adv = choose(@adverbs)
-		if rand(4) == 0
-			pred.concat(adv)
-			@sonnet.concat(adv)
-		end
-		while rand(4) == 0
-			(pred << ",").concat(adv)
-			(@sonnet << ",").concat(adv)
-		end
+  # @param [Object] plural
+  # @return [Object]
+  def predicate(plural)
+    line = @curr_line
+    syl = @curr_syllable
+    # begin
+    #   print("test only:")
+    #   return [] << nil if choose(@verbs).include? nil  #
+    # ensure
+    #   @curr_line = line
+    #   @curr_syllable = syl
+    # end
 
-		# "snorts widely, sleepily, joyfully in a park"
-		while rand(4) == 0
-			pred.concat(make(method(:prep_phrase)))
-		end
+    6.times do
+      pred = []
 
-		return pred
-	end
+      # "snorts"
+      if plural
+        pred.concat choose @verbs
+      else
+        # TODO: The commented-out part below is not
+        # adapted to the fact that "choose" returns
+        # an Array. Deal with this... someday
 
-	def prep_phrase
-		phrase = Array.new
+        # # this section is to protect against choosing a verb for its
+        # # non-conjugated form, and then conjugating it and having it
+        # # not scan or rhyme anymore
+        # chosen = make_present_tense(choose(@verbs))
+        # while !scans?(chosen) or !rhymes?(chosen)
+        #   chosen = make_present_tense(choose(@verbs))
+        # end
+        # pred.concat(chosen)
+        pred.concat(make_present_tense(choose @verbs))
+      end
 
-		prep = choose(@prepositions)
-		phrase.concat(prep)
-		@sonnet.concat(prep)
-		phrase.concat(make(method(:subject)))
+      # "snorts widely, sleepily, joyfully"
+      if rand(4).zero?
+        pred.concat(choose @adverbs)
+        (pred << ',').concat(choose @adverbs) while rand(4).zero?
 
-		return phrase
-	end
+      end
 
-	def make_present_tense(array)
-		verb = array[0]
-		if verb.spelling.end_with?("s") or verb.spelling.end_with?("h")
-			new_verb = @dict_reader.single_word(verb.spelling + "es")
-		else
-			new_verb = @dict_reader.single_word(verb.spelling + "s")
-		end
+      # "snorts widely, sleepily, joyfully in a park"
+      pred.concat prep_phrase while rand(4).zero? && (@curr_line < @num_lines)
 
-		array[0] = new_verb
-		return array
-	end
+      return pred unless pred.include? nil
 
-	########## poetic methods: for choosing the right words ##########
+      @curr_line = line
+      @curr_syllable = syl
+    end
+    [] << nil
+  end
 
-	def scans?(word)
-		for stress_pattern in word.stress_patterns
-			correct_stress = @meter.slice(@curr_syllable, stress_pattern.length)
-			if (stress_pattern == correct_stress and @curr_syllable + stress_pattern.length <= @meter.length) or (stress_pattern.length == 1)
-				# if this word is chosen for the poem, this is how many
-				# syllables we'll advance in the line
-				@curr_add = stress_pattern.length
-				return true
-			end
-		end
-		return false
-	end
+  def prep_phrase
+    syl = @curr_syllable
+    line = @curr_line
+    6.times do
+      phrase = []
 
-	def rhymes?(word)
-		#TODO: determine @rhyming_with from @sonnet
+      phrase.concat(choose @prepositions)
+      phrase.concat subject
 
-		if @rhyming_with == nil or @curr_syllable + @curr_add < @meter.length or rhymes_with?(word, @rhyming_with)
-			return true
-		else
-			return false
-		end
-	end
+      return phrase unless phrase.include? nil
 
-	def rhymes_with?(word1, word2)
-		if !(last_syls(word1) & last_syls(word2)).empty?
-			# if there's an overlap in the ways the two words' last syllables
-			# can be pronounced
-			return true
-		else
-			return false
-		end
-	end
+      @curr_line = line
+      @curr_syllable = syl
+    end
+    [] << nil
+  end
 
-	def last_syls(word)
-		last_syls = Array.new
-		for pronunciation in word.pronunciations
-			pron_length = word.stress_patterns[word.pronunciations.index(pronunciation)].length
-			# if @curr_syllable + pron_length <= @meter.length - 1
-			# 	return true
-			# 	# return true if this word doesn't put us at the end of the line
-			# end
+  def make_present_tense(array)
+    verb = array[0]
+    unless verb.nil?
+      new_verb = if verb.spelling.end_with? 's', 'h'
+                   @dict_reader.single_word(verb.spelling + 'es')
+                 else
+                   @dict_reader.single_word(verb.spelling + 's')
+                 end
 
-			last_syl_start = pronunciation.rindex(/\d/) - 2
-			last_syl = pronunciation.slice(last_syl_start..pronunciation.length)
-			last_syl = last_syl.tr('012', '')  # removes stress information; this should be accounted for by the scansion
-			last_syls << last_syl
-		end
-		return last_syls
-	end
+      array[0] = new_verb
+    end
+    array
+  end
 
-	def puts_all_state(input = nil)  # for debugging
-		puts
-		puts "*************DESCRIBING ENTIRE SONNETBOT STATE**************"
-		puts "Line #{@curr_line}"
-		puts @sonnet
-		puts "Syllable #{@curr_syllable}"
-		if @rhyming_with == nil
-			puts "Rhyming with nil"
-		else
-			puts "Rhyming with #{@rhyming_with.spelling}"
-		end
+  ########## poetic methods: for choosing the right words ##########
 
-		if input != nil
-			puts input
-		end
-	end
+  # @param [Object] word
+  # @return [Boolean]
+  def scans?(word)
+    word.stress_patterns.each do |stress_pattern|
+      correct_stress = @meter.slice(@curr_syllable, stress_pattern.length)
+      if (stress_pattern == correct_stress) && (@curr_syllable + stress_pattern.length <= @meter.length)
+        # if this word is chosen for the poem, this is how many
+        # syllables we'll advance in the line
+        @curr_add = stress_pattern.length
+        return true
+      elsif (@curr_syllable < @meter.length) && (stress_pattern.length == 1)
+        @curr_add = stress_pattern.length
+        return true
+      end
+    end
+    false
+  end
 
+  def rhymes?(word)
+    if @rhyming_with.nil? || ((@curr_syllable + @curr_add) < @meter.length)
+      true
+    elsif rhymes_with? word, @rhyming_with
+      true
+    else
+      false
+    end
+  end
+
+  def rhymes_with?(word1, word2)
+    if !(last_syls(word1) & last_syls(word2)).empty?
+      # if there's an overlap in the ways the two words can be pronounced
+      true
+    else
+      false
+    end
+  end
+
+  # @param [Object] word
+  # @return [Array] last_syls
+  def last_syls(word)
+    # puts_all_state(word.spelling)
+    last_syls = []
+    ind = 0
+    word.pronunciations.each do |pronunciation|
+      ind += 1
+      begin
+        # pron_length = word.stress_patterns[word.pronunciations.index pronunciation].length
+        # if @curr_syllable + pron_length <= @meter.length - 1
+        #   return true
+        #   # return true if this word doesn't put Fus at the end of the line
+        # end
+
+        last_syl_start = pronunciation.rindex(/\d/) - 2
+        last_syl = pronunciation.slice last_syl_start..pronunciation.length
+        last_syl = last_syl.tr('012', '') # removes stress information; this should be accounted for by the scansion
+        last_syls << last_syl
+      rescue StandardError
+        # usually an error will be thrown if the pronunciations list is too long for
+        # some reason. In this case, the pronunciations list should be shortened.
+        word.shorten_prons ind
+      end
+    end
+    last_syls
+  end
+
+  # for debugging
+  def puts_all_state(input = nil)
+    puts
+    puts '*************DESCRIBING ENTIRE SONNETBOT STATE**************'
+    puts "Line #{@curr_line}"
+    puts "Syllable #{@curr_syllable}"
+    if @rhyming_with.nil?
+      puts 'Rhyming with nil'
+    else
+      puts "Rhyming with #{@rhyming_with.spelling}"
+    end
+
+    puts input unless input.nil?
+  end
 end
