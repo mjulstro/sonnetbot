@@ -26,4 +26,5 @@ def test_scansion
 end
 
 sonnetbot = Sonnetbot.new
-puts sonnetbot.make_sonnet()
+#puts sonnetbot.make_sonnet
+puts sonnetbot.make_sonnet(num_lines = 8, meter = 'xx/xx/xx/', rhyme_scheme = 'AABBCCDD')

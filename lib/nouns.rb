@@ -544,7 +544,6 @@ def fill_nouns
 		"group",
 		"risk",
 		"word",
-		"fat",
 		"force",
 		"key",
 		"light",

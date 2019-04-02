@@ -42,7 +42,7 @@ class Sonnetbot
 
     # keep adding sentences to the sonnet
     # until we reach the last syllable of the last line
-    while (@curr_line <= @num_lines) && (@curr_syllable <= meter.length)
+    while (@curr_line < @num_lines) && (@curr_syllable < meter.length)
       @sonnet.concat sentence
     end
 
@@ -160,9 +160,11 @@ class Sonnetbot
     line = @curr_line
     6.times do
       check_rhymes
+
       @pos_hash.values.each do |pos|
+        # so we don't get the same words being chosen every time
         pos.shuffle
-        pos.reset # so we don't get the same words being chosen every time
+        pos.reset
       end
 
       # puts "Starting a sentence!"
@@ -363,8 +365,9 @@ class Sonnetbot
   end
 
   def rhymes_with?(word1, word2)
-    if !(last_syls(word1) & last_syls(word2)).empty?
+    if (!(last_syls(word1) & last_syls(word2)).empty?) #&& (word1.spelling != word2.spelling)
       # if there's an overlap in the ways the two words can be pronounced
+      # and they're not the same word
       true
     else
       false

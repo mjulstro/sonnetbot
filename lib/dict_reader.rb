@@ -24,9 +24,10 @@ class DictReader
     # to the word in the lists that's alphabetically first
     File.foreach(CMUDICT) do |line|
       if @next_word == 'zzzzzzzzzzzzz'
+        # we've gotten through all the words in the vocab
         word = Word.new(curr_word, @pronunciation_array)
         @curr_word_pos.add(word)
-        break # we've gotten through all the words in the vocab
+        break
 
         # if there are multiple pronunciations in CMUdict
         # for the word, this will find all of them
