@@ -365,41 +365,13 @@ class Sonnetbot
   end
 
   def rhymes_with?(word1, word2)
-    if (!(last_syls(word1) & last_syls(word2)).empty?) #&& (word1.spelling != word2.spelling)
+    if !(word1.last_syls & word2.last_syls).empty? #&& (word1.spelling != word2.spelling)
       # if there's an overlap in the ways the two words can be pronounced
       # and they're not the same word
       true
     else
       false
     end
-  end
-
-  # @param [Object] word
-  # @return [Array] last_syls
-  def last_syls(word)
-    # puts_all_state(word.spelling)
-    last_syls = []
-    ind = 0
-    word.pronunciations.each do |pronunciation|
-      ind += 1
-      begin
-        # pron_length = word.stress_patterns[word.pronunciations.index pronunciation].length
-        # if @curr_syllable + pron_length <= @meter.length - 1
-        #   return true
-        #   # return true if this word doesn't put Fus at the end of the line
-        # end
-
-        last_syl_start = pronunciation.rindex(/\d/) - 2
-        last_syl = pronunciation.slice last_syl_start..pronunciation.length
-        last_syl = last_syl.tr('012', '') # removes stress information; this should be accounted for by the scansion
-        last_syls << last_syl
-      rescue StandardError
-        # usually an error will be thrown if the pronunciations list is too long for
-        # some reason. In this case, the pronunciations list should be shortened.
-        word.shorten_prons ind
-      end
-    end
-    last_syls
   end
 
   def can_rhyme?(pos)

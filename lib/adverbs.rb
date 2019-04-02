@@ -1,5 +1,6 @@
 def fill_adverbs
 	a = ["aboard",
+		"thirsty",
 		"abnormally",
 		"about",
 		"abroad",

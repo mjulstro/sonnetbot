@@ -43,6 +43,34 @@ class Word
 		return string
 	end
 
+	# @param [Object] word
+	# @return [Array] last_syls
+	def last_syls
+	# puts_all_state(word.spelling)
+	last_syls = []
+	ind = 0
+	@pronunciations.each do |pronunciation|
+	  ind += 1
+	  begin
+	    # pron_length = word.stress_patterns[word.pronunciations.index pronunciation].length
+	    # if @curr_syllable + pron_length <= @meter.length - 1
+	    #   return true
+	    #   # return true if this word doesn't put Fus at the end of the line
+	    # end
+
+	    last_syl_start = pronunciation.rindex(/\d/) - 2
+	    last_syl = pronunciation.slice(last_syl_start..pronunciation.length)
+	    last_syl = last_syl.tr('012', '') # removes stress information; this should be accounted for by the scansion
+	    last_syls << last_syl
+	  rescue StandardError
+	    # usually an error will be thrown if the pronunciations list is too long for
+	    # some reason. In this case, the pronunciations list should be shortened.
+	    shorten_prons ind
+	  end
+	end
+	last_syls
+	end
+
 	def spelling
 		return @spelling
 	end
