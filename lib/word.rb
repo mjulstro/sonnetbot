@@ -2,7 +2,7 @@ require_relative 'dict_reader.rb'
 
 class Word
 
-	def initialize(spelling, pronunciation_array)
+	def initialize(spelling, pronunciation_array, pos)
 		stress_patterns = Array.new
 		nums_syllables = Array.new
 
@@ -15,6 +15,7 @@ class Word
 		@pronunciations = pronunciation_array
 		@stress_patterns = stress_patterns
 		@nums_syllables = nums_syllables
+		@part_of_speech = pos
 	end
 
 	def find_stress_pattern(pronunciation)
@@ -72,11 +73,11 @@ class Word
 	end
 
 	def spelling
-		return @spelling
+		@spelling
 	end
 
 	def pronunciations
-		return @pronunciations
+		@pronunciations
 	end
 
 	def shorten_prons(n)
@@ -84,15 +85,19 @@ class Word
 	end
 
 	def stress_patterns
-		return @stress_patterns
+		@stress_patterns
 	end
 
 	def nums_syllables
-		return @nums_syllables
+		@nums_syllables
+	end
+
+	def part_of_speech
+		@part_of_speech
 	end
 
 	# maybe pronunciation should be an inner class or smth?
 	# because pronunciations can have stress patterns and numbers of
-	# syllables, but words can't? but that would be a waste of disk space
+	# syllables, but words can't?
 
 end

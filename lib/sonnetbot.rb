@@ -324,9 +324,9 @@ class Sonnetbot
     verb = array[0]
     unless verb.nil?
       new_verb = if verb.spelling.end_with? 's', 'h'
-                   @dict_reader.single_word(verb.spelling + 'es')
+                   @dict_reader.single_word(verb.spelling + 'es', verb.part_of_speech)
                  else
-                   @dict_reader.single_word(verb.spelling + 's')
+                   @dict_reader.single_word(verb.spelling + 's', verb.part_of_speech)
                  end
 
       array[0] = new_verb
@@ -357,7 +357,7 @@ class Sonnetbot
   def rhymes?(word)
     if @rhyming_with.nil? || ((@curr_syllable + @curr_add) < @meter.length)
       true
-    elsif rhymes_with? word, @rhyming_with
+    elsif rhymes_with?(word, @rhyming_with)
       true
     else
       false

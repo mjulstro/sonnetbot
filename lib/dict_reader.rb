@@ -25,7 +25,7 @@ class DictReader
     File.foreach(CMUDICT) do |line|
       if @next_word == 'zzzzzzzzzzzzz'
         # we've gotten through all the words in the vocab
-        word = Word.new(curr_word, @pronunciation_array)
+        word = Word.new(curr_word, @pronunciation_array, @curr_word_pos)
         @curr_word_pos.add(word)
         break
 
@@ -38,7 +38,7 @@ class DictReader
         pronunciation = line.split(' ')[1..-1].join(' ')
         @pronunciation_array << pronunciation
       elsif line.start_with?(@next_word.upcase) && [' ', '('].include?(line[@next_word.length])
-        word = Word.new(curr_word, @pronunciation_array)
+        word = Word.new(curr_word, @pronunciation_array, @curr_word_pos)
         @curr_word_pos.add(word)
         curr_word = @next_word
 
@@ -48,7 +48,7 @@ class DictReader
         @pronunciation_array << pronunciation
       else
         if line.split(' ')[0] > @next_word.upcase
-          word = Word.new(curr_word, @pronunciation_array)
+          word = Word.new(curr_word, @pronunciation_array, @curr_word_pos)
           @curr_word_pos.add(word)
 
           initialize_current_word_array
@@ -62,7 +62,7 @@ class DictReader
     @parts_of_speech
   end
 
-  def single_word(word)
+  def single_word(word, pos)
     pronunciation_array = []
     File.foreach(CMUDICT) do |line|
       if line.start_with?(word.upcase) && [' ', '('].include?(line[word.length])
@@ -76,7 +76,7 @@ class DictReader
     # if pronunciation_array.empty?
     #   puts "#{word} could not be found in the CMUDict!"
     # end
-    Word.new(word, pronunciation_array)
+    Word.new(word, pronunciation_array, pos)
   end
 
   def initialize_current_word_array

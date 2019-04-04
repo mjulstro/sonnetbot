@@ -1,8 +1,6 @@
 def fill_adjectives
 	adj = ["abandoned",
 	 "able",
-	 "fucking",
-	 "lustful",
 	 "absolute",
 	 "adorable",
 	 "adventurous",
